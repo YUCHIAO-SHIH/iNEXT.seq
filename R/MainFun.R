@@ -71,8 +71,6 @@ iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 1
 #' @param type (required only when \code{base = "coverage"}), selection of plot type : \cr
 #' \code{type = 'B'} for plotting the gamma, alpha, and beta diversity ;  \cr
 #' \code{type = 'D'} for plotting 4 turnover dissimilarities.
-#' @param scale Are scales shared across all facets (the default, \code{"fixed"}), or do they vary across rows (\code{"free_x"}), columns (\code{"free_y"}), or both rows and columns (\code{"free"})?
-#' @param transp a value between 0 and 1 for controlling transparency. \code{transp = 0} is completely transparent, default is 0.4.
 #'
 #' @return a figure for phylogenetic diversity decomposition or dissimilarity measure.
 #'
@@ -81,11 +79,11 @@ iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 1
 #' data("tongue_cheek")
 #' data("tongue_cheek_tree")
 #' output <- iNEXTseq(tongue_cheek, q=c(0,1,2), nboot = 0, PDtree = tongue_cheek_tree)
-#' ggiNEXTseq(output, scale = 'free', transp = 0.4)
+#' ggiNEXTseq(output, type = "B")
 #'
 #' @export
-ggiNEXTseq = function(output, type = "B", scale = "fixed", transp = 0.4){
-  ggiNEXTbeta3D(output, type = type, scale = scale, transp = transp)
+ggiNEXTseq = function(output, type = "B"){
+  ggiNEXTbeta3D(output, type = type)
 
   # cbPalette <- rev(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#330066", "#CC79A7", "#0072B2", "#D55E00"))
   # ylab = "UniFrac distance"

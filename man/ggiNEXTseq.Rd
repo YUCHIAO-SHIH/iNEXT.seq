@@ -4,7 +4,7 @@
 \alias{ggiNEXTseq}
 \title{ggplot2 extension for an iNEXT.seq object}
 \usage{
-ggiNEXTseq(output, type = "B", scale = "fixed", transp = 0.4)
+ggiNEXTseq(output, type = "B")
 }
 \arguments{
 \item{output}{the output from iNEXTseq}
@@ -12,10 +12,6 @@ ggiNEXTseq(output, type = "B", scale = "fixed", transp = 0.4)
 \item{type}{(required only when \code{base = "coverage"}), selection of plot type : \cr
 \code{type = 'B'} for plotting the gamma, alpha, and beta diversity ;  \cr
 \code{type = 'D'} for plotting 4 turnover dissimilarities.}
-
-\item{scale}{Are scales shared across all facets (the default, \code{"fixed"}), or do they vary across rows (\code{"free_x"}), columns (\code{"free_y"}), or both rows and columns (\code{"free"})?}
-
-\item{transp}{a value between 0 and 1 for controlling transparency. \code{transp = 0} is completely transparent, default is 0.4.}
 }
 \value{
 a figure for phylogenetic diversity decomposition or dissimilarity measure.
@@ -28,6 +24,6 @@ a figure for phylogenetic diversity decomposition or dissimilarity measure.
 data("tongue_cheek")
 data("tongue_cheek_tree")
 output <- iNEXTseq(tongue_cheek, q=c(0,1,2), nboot = 0, PDtree = tongue_cheek_tree)
-ggiNEXTseq(output, scale = 'free', transp = 0.4)
+ggiNEXTseq(output, type = "B")
 
 }
