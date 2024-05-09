@@ -35,15 +35,15 @@
 #'
 #' @examples
 #'
-#' data("tongue_cheek")
-#' data("tongue_cheek_tree")
-#' output <- iNEXTseq(tongue_cheek, q=c(0,1,2),
-#'                        level = seq(0.5, 1, 0.05), nboot = 10,
-#'                        conf = 0.95, PDtree = tongue_cheek_tree, PDreftime = NULL)
+#' data("esophagus")
+#' data("esophagus_tree")
+#' output <- iNEXTseq(esophagus, q=c(0,1,2),
+#'                    level = seq(0.5, 1, 0.05), nboot = 10,
+#'                    conf = 0.95, PDtree = esophagus_tree, PDreftime = NULL)
 #'
 #' @export
 iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 10, conf = 0.95, PDtree = NULL, PDreftime = NULL){
-  out = iNEXTbeta3D(data, diversity = "PD", q=q, datatype = "abundance", base = base, level = level, nboot = nboot, conf = conf, PDtree = PDtree,  PDreftime = PDreftime)
+  out = iNEXTbeta3D(data, diversity = "PD", q=q, datatype = "abundance", base = base, level = level, nboot = nboot, conf = conf, PDtree = PDtree, PDreftime = PDreftime)
   out
   # UniFrac_out = list()
   # if(class(data)=="list"){
@@ -76,9 +76,9 @@ iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 1
 #'
 #' @examples
 #'
-#' data("tongue_cheek")
-#' data("tongue_cheek_tree")
-#' output <- iNEXTseq(tongue_cheek, q=c(0,1,2), nboot = 0, PDtree = tongue_cheek_tree)
+#' data("esophagus")
+#' data("esophagus_tree")
+#' output <- iNEXTseq(esophagus, q=c(0,1,2), nboot = 0, PDtree = esophagus_tree)
 #' ggiNEXTseq(output, type = "B")
 #'
 #' @export
@@ -135,19 +135,125 @@ ggiNEXTseq = function(output, type = "B"){
 }
 
 
+#' Asymptotic and observed phylogenetic gamma, alpha, beta diversity and dissimilarity of order q
+#' 
+#' \code{ObsAsyPD} computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for phylogenetic gamma, alpha, beta diversity and dissimilarity; these values with different order q can be used to depict a q-profile in the \code{ggObsAsyPD} function.\cr\cr 
+#' For each dimension, by default, both the observed and asymptotic diversity estimates will be computed.
+#' 
+#' @param data OTU data can be input as a \code{matrix/data.frame} (species by assemblages), or a \code{list} of \code{matrices/data.frames}, each matrix represents species-by-assemblages abundance matrix.\cr
+#' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, by = 0.2)}.
+#' @param weight weight for relative decomposition. Default is \code{"size"}.
+#' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.
+#' @param conf a positive number < 1 specifying the level of confidence interval. Default is 0.95.
+#' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
+#' @param PDreftime  a numerical value specifying reference time for PD. Default is \code{NULL} (i.e., the age of the root of PDtree).
+#' @param type estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.
+#' @param decomposition relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.
+#' 
+#' @return a data frames with asymptotic or observed phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
+#' 
+#' 
+#' @examples
+#' 
+#' @export
+ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95, method = c('Asymptotic', 'Observed'),
+                     PDtree, type = "mle", decomposition = "relative") {
+  
+  dat <- data[rowSums(data)>0, ]
+  if(decomposition == "relative"){
+    method = phy.H.rel
+  }else{
+    method = phy.H.abs
+  }
+  #H <- nrow(mat)
+  rtip <- PDtree$tip.label[!PDtree$tip.label %in% rownames(dat)]
+  rtree <- drop.tip(PDtree, rtip)
+  tmp <- TranMul(dat, rtree)
+  rtreephy <- newick2phylog(convToNewick(rtree))
+  
+  if(inherits(weight, "numeric")){
+    wk <- weight
+  } else if (weight == "size"){
+    wk <- colSums(dat)/sum(dat)
+  } else {
+    wk <- rep(1/ncol(dat), ncol(dat))
+  }
+  
+  est <- sapply(q, function(i) method(dat, tmp, i, rtreephy, wk, type))
+  
+  if(nboot!=0){
+    boot.est <- bootstrap.q.Beta(data = dat, rtree = rtree, tmp = tmp, q = q, nboot = nboot, wk = wk, type = type, method)
+    test <- boot.est[seq_len(H+1), , ]
+    #is.infinite(sum(boot.est))
+    #test <- boot.est[head(seq_len(dim(boot.est)[1]),H),1,]
+    id <- apply(test, 1:2, function(x) {
+      bb <- x
+      q1 <- quantile(bb,0.25)
+      q3 <- quantile(bb,0.75)
+      q1 <- q1-1.5*(q3-q1)
+      q3 <- q1+1.5*(q3-q1)
+      which(bb >= q1 & bb <= q3)
+    })
+    index <- Reduce(function(x,y) {intersect(x,y)}, id)
+    boot.est <- boot.est[ ,,index]
+    #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]<0] <- 0
+    #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]>1] <- 1
+    #dim(boot.est)
+    #diff.boot.est <- as.data.frame(apply(boot.est,3, tail, n = H))
+    out = lapply(seq_along(q), function(i){x = sapply(seq_len(nrow(boot.est)), function(j) transconf(Bresult = boot.est[j,i,], est = est[j,i], conf)) %>% t()
+    colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
+    rownames(x) = rownames(est)
+    return(x)}) %>% do.call(rbind,.)
+    
+    Order.q = rep(q, each = 7)
+    
+    Method = rep(rownames(out)[1:7], length(q))
+    
+    rownames(out) = NULL
+    
+    out = cbind(Method, Order.q, as.data.frame(out), Decomposition = decomposition)
+    
+    out
+    # 
+    # CL = t(sapply(seq_len(nrow(boot.est)), function(j) transconf(matrix(boot.est[j,,], nrow=length(q)), est[j,], conf)))
+    # rownames(CL) <- rownames(est)
+    # colnames(CL) <- c(sapply(paste0("q=",q), function(k) paste(k,c("est", "bt.sd", "LCL", "UCL"), sep = "_")))
+    # 
+  }else{
+    out <- lapply(seq_along(q), function(i){x = data.frame("Estimator" = est[,i], Bootstraps.e = NA, LB = NA, UB = NA) 
+    colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
+    return(x)}) %>% do.call(rbind,.)
+    
+    Order.q = rep(q, each = 7)
+    
+    Method = rep(rownames(out)[1:7], length(q))
+    
+    rownames(out) = NULL
+    
+    out = cbind(Method, Order.q, as.data.frame(out), Decomposition = decomposition)
+    out$'Bootstrap S.E.' = as.numeric(out$'Bootstrap S.E.')
+    out$LCL = as.numeric(out$LCL)
+    out$UCL = as.numeric(out$UCL)
+    
+    out
+  }
+  return(out)
+}
+
+
 #' function to calculate hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure
 #'
 #' \code{hierPD}: function to calculate empirical estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure
 #'
 #' @param data data should be input as a \code{matrix/data.frame} (species by assemblages).
 #' @param mat hierarchical structure of data should be input as a \code{matrix}.
-#' @param tree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
+#' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
 #' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.
 #' @param weight weight for relative decomposition. Default is \code{"size"}.
 #' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{20}.
 #' @param conf a positive number < 1 specifying the level of confidence interval. Default is \code{0.95}.
 #' @param type estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.
-#' @param decomposition relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}.
+#' @param decomposition relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.
 #'
 #' @return a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
 #'
@@ -156,7 +262,7 @@ ggiNEXTseq = function(output, type = "B"){
 #' data("antechinus")
 #' data("antechinus_mat")
 #' data("antechinus_tree")
-#' hier_output <- hierPD(antechinus, mat = antechinus_mat, tree = antechinus_tree, q = seq(0, 2, 0.2))
+#' hier_output <- hierPD(antechinus, mat = antechinus_mat, PDtree = antechinus_tree, q = seq(0, 2, 0.2))
 #'
 #' @export
 hierPD <- function(data, mat, PDtree, q = seq(0, 2, 0.2), weight = "size", nboot = 20,
