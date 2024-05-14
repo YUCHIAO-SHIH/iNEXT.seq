@@ -146,7 +146,6 @@ ggiNEXTseq = function(output, type = "B"){
 #' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.
 #' @param conf a positive number < 1 specifying the level of confidence interval. Default is 0.95.
 #' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
-#' @param PDreftime  a numerical value specifying reference time for PD. Default is \code{NULL} (i.e., the age of the root of PDtree).
 #' @param type estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.
 #' @param decomposition relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.
 #' 
@@ -180,7 +179,7 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
     wk <- weight
   } else if (weight == "size"){
     wk <- colSums(dat)/sum(dat)
-  } else {
+  } else if (weight == "equal"){
     wk <- rep(1/ncol(dat), ncol(dat))
   }
   

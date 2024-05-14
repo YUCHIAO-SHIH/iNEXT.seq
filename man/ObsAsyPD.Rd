@@ -31,8 +31,6 @@ ObsAsyPD(
 \item{type}{estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.}
 
 \item{decomposition}{relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.}
-
-\item{PDreftime}{a numerical value specifying reference time for PD. Default is \code{NULL} (i.e., the age of the root of PDtree).}
 }
 \value{
 a data frames with asymptotic or observed phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
