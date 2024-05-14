@@ -37,7 +37,7 @@
 #'
 #' data("esophagus")
 #' data("esophagus_tree")
-#' output <- iNEXTseq(esophagus, q=c(0,1,2),
+#' output <- iNEXTseq(esophagus$BCD, q = c(0,1,2),
 #'                    level = seq(0.5, 1, 0.05), nboot = 10,
 #'                    conf = 0.95, PDtree = esophagus_tree, PDreftime = NULL)
 #'
@@ -78,7 +78,7 @@ iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 1
 #'
 #' data("esophagus")
 #' data("esophagus_tree")
-#' output <- iNEXTseq(esophagus, q=c(0,1,2), nboot = 0, PDtree = esophagus_tree)
+#' output <- iNEXTseq(esophagus$BCD, q = c(0,1,2), nboot = 0, PDtree = esophagus_tree)
 #' ggiNEXTseq(output, type = "B")
 #'
 #' @export
@@ -155,17 +155,22 @@ ggiNEXTseq = function(output, type = "B"){
 #' 
 #' @examples
 #' 
+#' data("esophagus")
+#' data("esophagus_tree")
+#' ObsAsyPD_output <- ObsAsyPD(esophagus$BCD, q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
+#'                            PDtree = esophagus_tree, type = "mle", decomposition = "relative")
+#' 
 #' @export
-ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95, method = c('Asymptotic', 'Observed'),
-                     PDtree, type = "mle", decomposition = "relative") {
+ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
+                     PDtree, type = c("mle", "est"), decomposition = c("absolute", "relative")) {
   
   dat <- data[rowSums(data)>0, ]
-  if(decomposition == "relative"){
+  if (decomposition == "relative"){
     method = phy.H.rel
-  }else{
+  }else if (decomposition == "absolute"){
     method = phy.H.abs
   }
-  #H <- nrow(mat)
+  
   rtip <- PDtree$tip.label[!PDtree$tip.label %in% rownames(dat)]
   rtree <- drop.tip(PDtree, rtip)
   tmp <- TranMul(dat, rtree)
@@ -182,35 +187,35 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
   est <- sapply(q, function(i) method(dat, tmp, i, rtreephy, wk, type))
   
   if(nboot!=0){
-    boot.est <- bootstrap.q.Beta(data = dat, rtree = rtree, tmp = tmp, q = q, nboot = nboot, wk = wk, type = type, method)
-    test <- boot.est[seq_len(H+1), , ]
+    boot.est <- bootstrap.q.Beta(data = dat, rtree = rtree, tmp = tmp, q = q, nboot = nboot, wk = wk, type, method)
+    ##
+    test <- boot.est[seq_len(2), , ]
     #is.infinite(sum(boot.est))
     #test <- boot.est[head(seq_len(dim(boot.est)[1]),H),1,]
     id <- apply(test, 1:2, function(x) {
       bb <- x
-      q1 <- quantile(bb,0.25)
-      q3 <- quantile(bb,0.75)
+      q1 <- quantile(bb, 0.25)
+      q3 <- quantile(bb, 0.75)
       q1 <- q1-1.5*(q3-q1)
       q3 <- q1+1.5*(q3-q1)
       which(bb >= q1 & bb <= q3)
     })
     index <- Reduce(function(x,y) {intersect(x,y)}, id)
-    boot.est <- boot.est[ ,,index]
+    boot.est <- boot.est[,,index]
+    ##
     #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]<0] <- 0
     #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]>1] <- 1
     #dim(boot.est)
     #diff.boot.est <- as.data.frame(apply(boot.est,3, tail, n = H))
-    out = lapply(seq_along(q), function(i){x = sapply(seq_len(nrow(boot.est)), function(j) transconf(Bresult = boot.est[j,i,], est = est[j,i], conf)) %>% t()
-    colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
-    rownames(x) = rownames(est)
-    return(x)}) %>% do.call(rbind,.)
+    out = lapply(seq_along(q), function(i){
+      x = transconf(Bresult = boot.est[,i,], est = est[,i], conf)
+      colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
+      rownames(x) = rownames(est)
+      return(x)}) %>% do.call(rbind,.)
     
     Order.q = rep(q, each = 7)
-    
     Method = rep(rownames(out)[1:7], length(q))
-    
     rownames(out) = NULL
-    
     out = cbind(Method, Order.q, as.data.frame(out), Decomposition = decomposition)
     
     out
@@ -220,14 +225,13 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
     # colnames(CL) <- c(sapply(paste0("q=",q), function(k) paste(k,c("est", "bt.sd", "LCL", "UCL"), sep = "_")))
     # 
   }else{
-    out <- lapply(seq_along(q), function(i){x = data.frame("Estimator" = est[,i], Bootstraps.e = NA, LB = NA, UB = NA) 
-    colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
-    return(x)}) %>% do.call(rbind,.)
+    out <- lapply(seq_along(q), function(i){
+      x = data.frame("Estimator" = est[,i], Bootstraps.e = NA, LB = NA, UB = NA) 
+      colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
+      return(x)}) %>% do.call(rbind,.)
     
     Order.q = rep(q, each = 7)
-    
     Method = rep(rownames(out)[1:7], length(q))
-    
     rownames(out) = NULL
     
     out = cbind(Method, Order.q, as.data.frame(out), Decomposition = decomposition)
@@ -270,7 +274,7 @@ hierPD <- function(data, mat, PDtree, q = seq(0, 2, 0.2), weight = "size", nboot
   hier_method = c("qPD", "1-C", "1-U", "1-V", "1-S")
   out = hier.phylogeny(data, mat, tree = PDtree, q = q, weight = weight, nboot = nboot,
                        conf = conf, type = type, decomposition = decomposition)
-  out[str_sub(out$Method, 1, 3)%in%hier_method, ]
+  out[str_sub(out$Method, 1, 3) %in% hier_method, ]
 }
 
 

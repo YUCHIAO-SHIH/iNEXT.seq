@@ -21,9 +21,9 @@ a figure for phylogenetic diversity decomposition or dissimilarity measure.
 }
 \examples{
 
-data("tongue_cheek")
-data("tongue_cheek_tree")
-output <- iNEXTseq(tongue_cheek, q=c(0,1,2), nboot = 0, PDtree = tongue_cheek_tree)
+data("esophagus")
+data("esophagus_tree")
+output <- iNEXTseq(esophagus$BCD, q = c(0,1,2), nboot = 0, PDtree = esophagus_tree)
 ggiNEXTseq(output, type = "B")
 
 }

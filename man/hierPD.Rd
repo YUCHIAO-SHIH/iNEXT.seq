@@ -21,6 +21,8 @@ hierPD(
 
 \item{mat}{hierarchical structure of data should be input as a \code{matrix}.}
 
+\item{PDtree}{a phylogenetic tree in Newick format for all observed species in the pooled assemblage.}
+
 \item{q}{a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.}
 
 \item{weight}{weight for relative decomposition. Default is \code{"size"}.}
@@ -31,9 +33,7 @@ hierPD(
 
 \item{type}{estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.}
 
-\item{decomposition}{relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}.}
-
-\item{tree}{a phylogenetic tree in Newick format for all observed species in the pooled assemblage.}
+\item{decomposition}{relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.}
 }
 \value{
 a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
@@ -46,6 +46,6 @@ a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) 
 data("antechinus")
 data("antechinus_mat")
 data("antechinus_tree")
-hier_output <- hierPD(antechinus, mat = antechinus_mat, tree = antechinus_tree, q = seq(0, 2, 0.2))
+hier_output <- hierPD(antechinus, mat = antechinus_mat, PDtree = antechinus_tree, q = seq(0, 2, 0.2))
 
 }

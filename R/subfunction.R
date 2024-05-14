@@ -139,11 +139,7 @@ est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
     A = 1
   }
   t_bar <- sum(xx*LL/n)
-  # position0 <- which(q==0)
-  # position1 <- which(q==1)
-  # position_else = c(1:length(q))[-c(position1)]
-  #position_else = c(1:length(q))[-c(position0,position1)]
-  #ans = rep(0, length(q))
+  
   if(q==0){
     ans = PD_obs+ifelse(g2>0, (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/2*(f2-1))
   }else if(q==1){
@@ -154,7 +150,6 @@ est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
     tmp2 = cbind(tmp2, sapply(tmp2[,1], function(x) sum( 1/(x:(n-1)))))
     h1 = sum(apply(tmp2, 1, prod))/n
     h = h1+h2
-    #ans[position1] = t_bar*exp(h/t_bar)
     ans = h
   } else{
     r = 0 : (n-1)
@@ -168,28 +163,28 @@ est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
 }
 
 
-bootstrap.q.Beta <- function(data, mat, rtree, tmp, q, nboot, wij, formula, method){
-  H <- nrow(mat)
-  out = array(0, dim=c(7*H, length(q), nboot))
+bootstrap.q.Beta <- function(data, rtree, tmp, q, nboot, wk, formula, method){
+  out = array(0, dim = c(7, length(q), nboot))
   pool <- rowSums(data)
   rtreephy <- newick2phylog(convToNewick(rtree))
   #if(datatype == "abundance"){
   n = colSums(data) ; N = ncol(data)
-  pop = Boots.pop(data, rtree, tmp$Alpha)
+  pop = Boots.pop(data, rtree, tmp$Alpha) #boots population
   S = nrow(data)
   #B = length(c(phytree$leaves,phytree$parts))
-  if(pop$unseen == 0) p = pop$p[1:S,]
-  if(pop$unseen != 0) p = pop$p[c(1:S,tail(1:nrow(pop$p), pop$unseen)),]
+  if (pop$unseen == 0) p = pop$p[1:S,]
+  if (pop$unseen != 0) p = pop$p[c(1:S, tail(1:nrow(pop$p), pop$unseen)),]
   boot.data = array(0, dim = dim(p))
   rownames(boot.data) <- rownames(p)
+  
   S = nrow(data)
   B = S+rtree$Nnode
   for(i in 1:nboot){
     L = pop$L
-    if(pop$unseen == 0) p = pop$p[1:S,]
-    if(pop$unseen != 0) p = pop$p[c(1:S,(B+1):nrow(pop$p)),]
+    if (pop$unseen == 0) p = pop$p[1:S,]
+    if (pop$unseen != 0) p = pop$p[c(1:S, (B+1):nrow(pop$p)),]
     boot.data = array(0, dim = dim(p))
-    for(j in 1:ncol(p)) boot.data[,j] = rmultinom(1,n[j],p[,j])
+    for (j in 1:ncol(p)) boot.data[,j] = rmultinom(1, n[j], p[,j])
     rownames(boot.data) <- rownames(p)
     unseen = boot.data[-(1:S),]
     boot.data.obs <- boot.data[1:S,]
@@ -215,8 +210,8 @@ bootstrap.q.Beta <- function(data, mat, rtree, tmp, q, nboot, wij, formula, meth
     boot.alpha <- apply(boot.datatmp, 2, function(s) data.frame(branch_abun = s, branch_length = L.gamma))
     boot.gamma <- data.frame(branch_abun = boot.gamma, branch_length = L.gamma)
     boot.tmp <- list(Gamma = boot.gamma, Alpha = boot.alpha)
-    #sapply(q, function(qq) method(dat = boot.data, mat, boot.tmp, qq, rtreephy = rtreephy, wij, formula))
-    out[,,i] = sapply(q, function(qq) method(dat = boot.data, mat, boot.tmp, qq, rtreephy = rtreephy, wij, formula))
+    
+    out[,,i] = sapply(q, function(qq) method(dat = boot.data, boot.tmp, qq, rtreephy = rtreephy, wk, formula))
   }
   #print(sum(is.infinite(apply(out, 3, sum))))
   #out[ , ,!is.infinite(apply(out, 3, sum))]
@@ -224,4 +219,75 @@ bootstrap.q.Beta <- function(data, mat, rtree, tmp, q, nboot, wij, formula, meth
   return(out)
 }
 
-
+Boots.pop <- function(data, rtree, tmp){
+  # if(datatype == "abundance"){
+  N = ncol(data); n = colSums(data) #z+k
+  pool = rowSums(data); OBS = length(pool) #S_pool_obs
+  rtreephy <- newick2phylog(convToNewick(rtree))
+  OBS_B <- dim(tmp[[1]])[1] #B_pool_obs
+  obs <- colSums(data>0) #S_k_obs
+  TT <- sum(tmp[[1]][1]/n[1]*tmp[[1]][2])
+  
+  F1 = sum(pool == 1); F2 = sum(pool == 2)
+  F0 = ifelse(F2==0, F1*(F1-1)/2, F1^2/(2*F2))*(sum(n)-1)/sum(n) #pool assemblage f0 estimate
+  F0_N <- round(F0)
+  
+  f1 = sapply(1:N,function(k) sum(data[,k]==1))
+  f2 = sapply(1:N,function(k) sum(data[,k]==2))
+  g1 = unlist(lapply(tmp, function(tmp_k) sum(tmp_k[tmp_k[,1]==1,2]) ))
+  g2 = unlist(lapply(tmp, function(tmp_k) sum(tmp_k[tmp_k[,1]==2,2]) ))
+  C <- ifelse(f2 == 0, C <- 1 - f1/n*(n-1)*(f1-1)/((n-1)*(f1-1) + 2), C <- 1 - f1/n*(n-1)*f1/((n-1)*f1 + 2*f2)) #C_k_hat
+  f0 <- ifelse(f2 == 0, f0 <- f1*(f1-1)/2, f0 <- f1^2/(2*f2))*(n-1)/n #each assemblage f0 estimate
+  f0_N <- round(f0)
+  
+  r.data = sapply(1:N, function(k) data[,k]/n[k])
+  W = sapply(1:N,function(k) (1-C[k])/sum(r.data[,k]*(1-r.data[,k])^n[k])) #lambda_k_hat
+  #Chao1-PD
+  g0 = sapply(1:N, function(k)
+    if ((2*g2[k]*f1[k])>g1[k]*f2[k]) (n[k]-1)/n[k]*g1[k]^2/2/g2[k]
+    else (n[k]-1)/n[k]*g1[k]*(f1[k]-1)/2/(f2[k]+1) )
+  
+  if (F0 > 0){
+    boots.pop = rbind(r.data, matrix(0, ncol=N, nrow=F0_N))
+  } #obs species abundance + undetected
+  else {boots.pop = r.data}
+  L = matrix(0, nrow=(OBS_B+F0_N), ncol=N)
+  boots.pop2 = matrix(0, nrow=(OBS_B+F0_N), ncol=N) #obs branch abundance + undetected
+  for (i in 1:N)
+  {
+    if (f0_N[i]>0)
+    {
+      f0_N[i] = ifelse(f0_N[i]+obs[i]>OBS+F0_N, OBS+F0_N-obs[i], f0_N[i])
+      boots.pop[,i][1:OBS] <- r.data[ ,i]*(1-W[i]*(1-r.data[ ,i])^n[i]) #species, p_ik_hat, i<S_k_obs
+      I = which(boots.pop[,i]==0) #ai+bi
+      II = sample(I, f0_N[i])
+      u.p <- (1-C[i])/f0_N[i] #p_ik_hat, i>S_k_obs
+      boots.pop[II, i] = rep(u.p, f0_N[i])
+      da = boots.pop[1:OBS, i] #corrected observed relative species abundance
+      names(da) = rownames(data)
+      mat = choose_data(da, rtreephy) #corrected observed relative node abundance
+      boots.pop2[,i] = c(mat[,1], boots.pop[,i][-(1:OBS)]) #add undetected species
+      F00 = sum(II > OBS) #not detect in pool assemblage
+      L[1:nrow(mat), i] = mat[,2]
+      if (F00>0){
+        index = which(boots.pop2[,i] > 0)[which(boots.pop2[,i] > 0) > nrow(mat)]
+        #un.sp <- rownames(data)[II[II<OBS]]
+        #g0r <- g0[i]- sum(mat[un.sp,2])
+        L[index, i] = g0[i]/F00
+      }
+    }else{
+      L[seq_len(OBS_B), i] = tmp[[i]][ ,2]
+      boots.pop2[seq_len(OBS_B), i] = tmp[[i]][,1]
+    }
+  }
+  if (F0_N==0){
+    rownames(L) <- rownames(mat)
+    rownames(boots.pop2) <- rownames(mat)
+  } else{
+    rownames(L) <- c(rownames(mat), paste0("u", seq_len(F0_N)))
+    rownames(boots.pop2) <- c(rownames(mat), paste0("u", seq_len(F0_N)))
+  }
+  L[L>TT] <- TT
+  return(list(p=boots.pop2, L=L, unseen=F0_N))
+  # }
+}
