@@ -28,7 +28,7 @@
 #' @import ade4
 #' @import tidyr
 #' @import tibble
-#' @import str_sub
+#' @import stringr
 #' @import iNEXT.beta3D
 #' @import hiDIP
 #'
