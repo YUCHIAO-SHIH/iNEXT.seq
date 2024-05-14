@@ -1,3 +1,27 @@
+TranMul <- function(data, tree){
+  rtree = newick2phylog(convToNewick(tree))
+  data = cbind(data[names(rtree$leaves), ])
+  rdata = apply(data, 1, sum)
+  AlphaTmp = list()
+  GammaTmp = choose_data(rdata, rtree)
+  GammaTbar = sum(GammaTmp[, 1]*GammaTmp[, 2]) / sum(rdata)
+  for(i in 1:ncol(data)){
+    adata = aadata = data[, i]
+    names(aadata) = rownames(data)
+    names(adata) = tree$tip.label
+    if(length(rtree$leaves)<=2){
+      abun <- c(adata[names(adata)%in%rtree$tip.label], root = sum(adata))
+      tmp = data.frame('branch_abun'=abun, "branch_length" = c(rtree$edge.length,0))
+    } else{
+      tmp = choose_data(aadata, rtree)
+    }
+    AlphaTmp[[i]] = tmp
+  }
+  output = list(Alpha=AlphaTmp, Gamma=GammaTmp)
+  return(output)
+}
+
+
 phy.H.rel <- function(dat, tmp, q, rtreephy, wk, formula){
   n <- sum(dat)
   N <- ncol(dat)
@@ -218,6 +242,7 @@ bootstrap.q.Beta <- function(data, rtree, tmp, q, nboot, wk, formula, method){
   #}
   return(out)
 }
+
 
 Boots.pop <- function(data, rtree, tmp){
   # if(datatype == "abundance"){
