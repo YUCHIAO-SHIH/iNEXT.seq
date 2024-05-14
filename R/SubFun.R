@@ -1,3 +1,16 @@
+choose_data = function(data, tree){
+  
+  tmp <- data[names(tree$leaves)]  
+  for(i in 1:length(tree$parts)){
+    tmp[1+length(tmp)] <- sum(tmp[tree$parts[[i]]])
+    names(tmp)[length(tmp)] <- names(tree$parts)[i]
+  }
+  tmp <- data.frame('branch_abun' = tmp,"branch_length" = c(tree$leaves,tree$nodes))
+  
+  return(tmp)
+}
+
+
 convToNewick <- function(tree){
   tree<-reorder.phylo(tree,"cladewise")
   n<-length(tree$tip)
@@ -349,3 +362,14 @@ Boots.pop <- function(data, rtree, tmp){
   return(list(p=boots.pop2, L=L, unseen=F0_N))
   # }
 }
+
+
+transconf = function(Bresult, est, conf){
+  est.btse = apply(Bresult, 1, sd)
+  est.LCL = est - qnorm(1-(1-conf)/2) * est.btse 
+  est.UCL = est + qnorm(1-(1-conf)/2) * est.btse
+  # if(any(est.LCL<0)) est.LCL[est.LCL<0] <- 0
+  # if(any(est.UCL>1)) est.UCL[est.UCL>1] <- 1
+  cbind(est = est, btse=est.btse, LCL=est.LCL, UCL = est.UCL)
+}
+
