@@ -162,7 +162,7 @@ ggiNEXTseq = function(output, type = "B"){
 #' 
 #' @export
 ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
-                     PDtree, type = c("mle", "est"), decomposition = c("absolute", "relative")) {
+                     PDtree, type = "mle", decomposition = "relative") {
   
   dat <- data[rowSums(data)>0, ]
   if (decomposition == "relative"){
