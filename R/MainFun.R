@@ -143,7 +143,7 @@ ggiNEXTseq = function(output, type = "B"){
 #' 
 #' @param data OTU data can be input as a \code{matrix/data.frame} (species by assemblages), or a \code{list} of \code{matrices/data.frames}, each matrix represents species-by-assemblages abundance matrix.\cr
 #' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, by = 0.2)}.
-#' @param weight weight for relative decomposition. Default is \code{"size"}.
+#' @param weight weight for relative decomposition. Default is \code{"size"}. For \code{(type = "est")} only use size weight.
 #' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.
 #' @param conf a positive number < 1 specifying the level of confidence interval. Default is 0.95.
 #' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
@@ -176,33 +176,39 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
   tmp <- TranMul(dat, rtree)
   rtreephy <- newick2phylog(convToNewick(rtree))
   
-  if(inherits(weight, "numeric")){
-    wk <- weight
-  } else if (weight == "size"){
-    wk <- colSums(dat)/sum(dat)
-  } else if (weight == "equal"){
-    wk <- rep(1/ncol(dat), ncol(dat))
+  if (type == "mle"){
+    if (inherits(weight, "numeric")){
+      wk <- weight
+    } else if (weight == "size"){
+      wk <- colSums(dat)/sum(dat) #size weight
+    } else if (weight == "equal"){
+      wk <- rep(1/ncol(dat), ncol(dat)) #equal weight
+    }
+  }else if (type == "est"){
+    wk <- colSums(dat)/sum(dat) #size weight
   }
   
   est <- sapply(q, function(i) method(dat, tmp, i, rtreephy, wk, type))
   
-  if(nboot!=0){
+  if(nboot != 0){
     boot.est <- bootstrap.q.Beta(data = dat, rtree = rtree, tmp = tmp, q = q, nboot = nboot, wk = wk, type, method)
+    
     ##
-    test <- boot.est[seq_len(2), , ]
-    #is.infinite(sum(boot.est))
-    #test <- boot.est[head(seq_len(dim(boot.est)[1]),H),1,]
-    id <- apply(test, 1:2, function(x) {
-      bb <- x
-      q1 <- quantile(bb, 0.25)
-      q3 <- quantile(bb, 0.75)
-      q1 <- q1-1.5*(q3-q1)
-      q3 <- q1+1.5*(q3-q1)
-      which(bb >= q1 & bb <= q3)
-    })
-    index <- Reduce(function(x,y) {intersect(x,y)}, id)
-    boot.est <- boot.est[,,index]
+    # test <- boot.est[seq_len(2), , ]
+    # #is.infinite(sum(boot.est))
+    # #test <- boot.est[head(seq_len(dim(boot.est)[1]),H),1,]
+    # id <- apply(test, 1:2, function(x) {
+    #   bb <- x
+    #   q1 <- quantile(bb, 0.25)
+    #   q3 <- quantile(bb, 0.75)
+    #   q1 <- q1-1.5*(q3-q1)
+    #   q3 <- q1+1.5*(q3-q1)
+    #   which(bb >= q1 & bb <= q3)
+    # })
+    # index <- Reduce(function(x,y) {intersect(x,y)}, id)
+    # boot.est <- boot.est[,,index]
     ##
+    
     #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]<0] <- 0
     #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]>1] <- 1
     #dim(boot.est)

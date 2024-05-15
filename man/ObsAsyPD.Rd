@@ -20,7 +20,7 @@ ObsAsyPD(
 
 \item{q}{a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, by = 0.2)}.}
 
-\item{weight}{weight for relative decomposition. Default is \code{"size"}.}
+\item{weight}{weight for relative decomposition. Default is \code{"size"}. For \code{(type = "est")} only use size weight.}
 
 \item{nboot}{a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.}
 

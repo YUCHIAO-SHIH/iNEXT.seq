@@ -85,11 +85,11 @@ phy.H.rel <- function(dat, tmp, q, rtreephy, wk, formula){
     abun <- aa[,k]
     nk <- sum(dat[,k])
     return(abun/nk)
-  }) #zik|z+k
-  weight.p <- pik*t(replicate(B,wk)) #(zik|z+k)*wk => zik|z++
+  }) #zik|z+k = pi|k
+  wk.pik <- pik*t(replicate(B,wk)) #(zik|z+k)*wk => zik|z++ = pik
   if(formula == "mle"){
     qDk <- apply(pik, 2, get("mle.phy.q"), LL = gL, TT = TT, q) ##\sum{p^q} or -\sum{p*log(p)})
-    qDg <- mle.phy.q(gp, LL = gL, TT = TT, q)
+    qDg <- mle.phy.q(rowSums(wk.pik), LL = gL, TT = TT, q)
   } else if(formula == "est"){
     qDk <- sapply(seq_len(ncol(dat)), function(k){
       nk <- sum(dat[,k])
