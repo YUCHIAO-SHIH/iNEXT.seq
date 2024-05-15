@@ -233,6 +233,21 @@ est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
 }
 
 
+delta <- function(data, k, n, A){
+  ans = sapply(1:length(k), function(i){
+    if(k[i]<n){
+      data1 = data[data[,1]<=(n-k[i]) &  data[,1]>=1,]
+      if( class(data1) == "numeric" ) data1 = t(as.matrix(data1))
+      sum( data1[,2]*(data1[,1]/n)*exp(lchoose(n-data1[,1], k[i])-lchoose(n-1, k[i])) )
+    }else{
+      g1 = sum(data[data==1,2])
+      g1*(1-A)^(k[i]-n+1)/n
+    }
+  })
+  return( ans )
+}
+
+
 bootstrap.q.Beta <- function(data, rtree, tmp, q, nboot, wk, formula, method){
   out = array(0, dim = c(7, length(q), nboot))
   pool <- rowSums(data)
@@ -319,9 +334,8 @@ Boots.pop <- function(data, rtree, tmp){
     else (n[k]-1)/n[k]*g1[k]*(f1[k]-1)/2/(f2[k]+1) )
   
   if (F0 > 0){
-    boots.pop = rbind(r.data, matrix(0, ncol=N, nrow=F0_N))
-  } #obs species abundance + undetected
-  else {boots.pop = r.data}
+    boots.pop = rbind(r.data, matrix(0, ncol=N, nrow=F0_N)) #obs species abundance + undetected
+  }else {boots.pop = r.data}
   L = matrix(0, nrow=(OBS_B+F0_N), ncol=N)
   boots.pop2 = matrix(0, nrow=(OBS_B+F0_N), ncol=N) #obs branch abundance + undetected
   for (i in 1:N)
