@@ -91,12 +91,11 @@ phy.H.rel <- function(dat, tmp, q, rtreephy, wk, formula){
     qDk <- apply(pik, 2, get("mle.phy.q"), LL = gL, TT = TT, q) ##\sum{p^q} or -\sum{p*log(p)})
     qDg <- mle.phy.q(rowSums(wk.pik), LL = gL, TT = TT, q)
   } else if(formula == "est"){
-    gamma_dat <- rowSums(dat)
     qDk <- sapply(seq_len(ncol(dat)), function(k){
       nk <- sum(dat[,k])
-      get("est.phy.q")(dat = dat[,k], xx = aa[,k], LL = gL, TT = TT, n = nk, q, rtreephy)
+      get("est.phy.q")(xx = aa[,k], LL = gL, TT = TT, n = nk, q, rtreephy)
     })
-    qDg <- est.phy.q(dat = gamma_dat, xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
+    qDg <- est.phy.q(xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
   }
   if(q!=1){
     alpha.R <- (wk%*%qDk)^(1/(1-q))
@@ -140,11 +139,9 @@ phy.H.abs <- function(dat, tmp, q, rtreephy, wk, formula){
     qDa <- mle.phy.q(c(pik), LL = rep(gL, N), TT = TT, q) ##\sum{p^q} or -\sum{p*log(p)})
     qDg <- mle.phy.q(gp, LL = gL, TT = TT, q)
   } else if(formula == "est"){
-    gamma_dat <- rowSums(dat)
-    dat_joint <- c(as.matrix(dat))
     aa_joint <- c(aa) %>% `names<-`(rep(rownames(aa), N))
-    qDa <- est.phy.q(dat = dat_joint, xx = aa_joint, LL = rep(gL, N), TT = TT, n = n, q, rtreephy)
-    qDg <- est.phy.q(dat = gamma_dat, xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
+    qDa <- est.phy.q(xx = aa_joint, LL = rep(gL, N), TT = TT, n = n, q, rtreephy)
+    qDg <- est.phy.q(xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
   }
   if(q!=1){
     alpha.C <- qDa^(1/(1-q))/N
@@ -180,7 +177,7 @@ mle.phy.q <- function(pp, LL, TT, q){
 }
 
 
-est.phy.q <- function(dat, xx, LL, TT, n, q, rtreephy){ # proposed
+est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
   LL <- LL[names(xx)]
   tmp <- data.frame(abun = xx, length = LL)
   PD_obs <- sum(tmp[tmp[,1]>0,2])
@@ -216,11 +213,9 @@ est.phy.q <- function(dat, xx, LL, TT, n, q, rtreephy){ # proposed
   if(q==0){
     
     ##chunyu revise##
-    f1 = sum(dat==1)
-    f2 = sum(dat==2)
     ans = PD_obs + ifelse(g2>(g1*f2)/(2*f2), (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/(2*(f2+1)))
-    
     #ans = PD_obs + ifelse(g2>0, (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/2*(f2-1))
+    
   }else if(q==1){
     q1 = sum(sapply(1:(n-1), function(r) {(1-A)^r/r} ))
     if(A < 1) h2 = (g1/n)*((1-A)^(-n+1))*(-log(A)-q1)
