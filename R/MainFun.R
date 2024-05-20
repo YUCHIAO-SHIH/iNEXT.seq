@@ -334,7 +334,7 @@ ggObsAsyPD <- function(output, type = "B"){
     out = out + ylab("Phylogenetic diversity") + xlab("Order q")
   }
   else if (type == "D") {
-    out = out + ylab("Dissimilarity measure") + xlab("Order q")
+    out = out + ylab("Phylogenetic dissimilarity") + xlab("Order q")
   }
   
   return(out)
