@@ -104,7 +104,7 @@ phy.H.rel <- function(dat, tmp, q, rtreephy, wk, formula){
   } else{
     alpha.R <- exp(wk%*%(qDk/TT+log(TT)))
     joint.R <- exp(-wk%*%log(wk) + wk%*%(qDk/TT+log(TT)))
-    gamma.R <- exp(qDg+log(TT))
+    gamma.R <- exp(qDg/TT+log(TT))
   }
   beta.R <- gamma.R/alpha.R
   betamax.R <- joint.R/alpha.R
@@ -148,7 +148,7 @@ phy.H.abs <- function(dat, tmp, q, rtreephy, wk, formula){
     gamma.C <- qDg^(1/(1-q))
   } else{
     alpha.C <- exp(qDa/TT+log(TT))/N
-    gamma.C <- exp(qDg+log(TT))
+    gamma.C <- exp(qDg/TT+log(TT))
   }
   beta.C <- gamma.C/alpha.C
   

@@ -23,12 +23,13 @@
 #' @import phyclust
 #' @import tidytree
 #' @import RColorBrewer
-#' @import iNEXT.3D
 #' @import future.apply
 #' @import ade4
 #' @import tidyr
 #' @import tibble
 #' @import stringr
+#' @import forcats
+#' @import iNEXT.3D
 #' @import iNEXT.beta3D
 #' @import hiDIP
 #'
@@ -38,13 +39,14 @@
 #'
 #' data("esophagus")
 #' data("esophagus_tree")
-#' output <- iNEXTseq(esophagus$BCD, q = c(0,1,2),
-#'                    level = seq(0.5, 1, 0.05), nboot = 10,
+#' output <- iNEXTseq(esophagus[1], q = c(0,1,2), level = seq(0.5, 1, 0.05), nboot = 10,
 #'                    conf = 0.95, PDtree = esophagus_tree, PDreftime = NULL)
 #'
 #' @export
-iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 10, conf = 0.95, PDtree = NULL, PDreftime = NULL){
-  out = iNEXTbeta3D(data, diversity = "PD", q=q, datatype = "abundance", base = base, level = level, nboot = nboot, conf = conf, PDtree = PDtree, PDreftime = PDreftime)
+iNEXTseq <- function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 10, conf = 0.95, PDtree = NULL, PDreftime = NULL){
+  out = iNEXTbeta3D(data, diversity = "PD", q = q, datatype = "abundance", base = base, 
+                    level = level, nboot = nboot, conf = conf, PDtype = "PD", 
+                    PDtree = PDtree, PDreftime = PDreftime)
   out
   # UniFrac_out = list()
   # if(class(data)=="list"){
@@ -70,7 +72,7 @@ iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 1
 #'
 #' @param output the output from iNEXTseq
 #' @param type (required only when \code{base = "coverage"}), selection of plot type : \cr
-#' \code{type = 'B'} for plotting the gamma, alpha, and beta diversity ;  \cr
+#' \code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr
 #' \code{type = 'D'} for plotting 4 turnover dissimilarities.
 #'
 #' @return a figure for phylogenetic diversity decomposition or dissimilarity measure.
@@ -79,11 +81,11 @@ iNEXTseq = function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 1
 #'
 #' data("esophagus")
 #' data("esophagus_tree")
-#' output <- iNEXTseq(esophagus$BCD, q = c(0,1,2), nboot = 0, PDtree = esophagus_tree)
+#' output <- iNEXTseq(esophagus[1], q = c(0,1,2), nboot = 10, PDtree = esophagus_tree)
 #' ggiNEXTseq(output, type = "B")
 #'
 #' @export
-ggiNEXTseq = function(output, type = "B"){
+ggiNEXTseq <- function(output, type = "B"){
   ggiNEXTbeta3D(output, type = type)
 
   # cbPalette <- rev(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#330066", "#CC79A7", "#0072B2", "#D55E00"))
@@ -157,96 +159,184 @@ ggiNEXTseq = function(output, type = "B"){
 #' 
 #' data("esophagus")
 #' data("esophagus_tree")
-#' ObsAsyPD_output <- ObsAsyPD(esophagus$BCD, q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
+#' ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
 #'                            PDtree = esophagus_tree, type = "mle", decomposition = "relative")
 #' 
 #' @export
 ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
                      PDtree, type = "mle", decomposition = "relative") {
   
-  dat <- data[rowSums(data)>0, ]
-  if (decomposition == "relative"){
-    method = phy.H.rel
-  }else if (decomposition == "absolute"){
-    method = phy.H.abs
+  if (inherits(data, "data.frame") | inherits(data, "matrix")) 
+    data = list(Dataset_1 = data)
+  if (inherits(data, "list")) {
+    if (is.null(names(data))) 
+      dataset_names = paste0("Dataset_", 1:length(data))
+    else dataset_names = names(data)
+    Ns = sapply(data, ncol)
+    data_list = data
+  }
+  if (type == "mle" & inherits(weight, "numeric")){
+    if (length(data_list) != 1 & length(unique(Ns)) != 1)
+      stop("Please select datasets with same number of assemblages N.")
   }
   
-  rtip <- PDtree$tip.label[!PDtree$tip.label %in% rownames(dat)]
-  rtree <- drop.tip(PDtree, rtip)
-  tmp <- TranMul(dat, rtree)
-  rtreephy <- newick2phylog(convToNewick(rtree))
   
-  if (type == "mle"){
-    if (inherits(weight, "numeric")){
-      wk <- weight
-    } else if (weight == "size"){
-      wk <- colSums(dat)/sum(dat) #size weight
-    } else if (weight == "equal"){
-      wk <- rep(1/ncol(dat), ncol(dat)) #equal weight
+  for_each_dataset = function(data, dataset_name){
+    
+    dat <- data[rowSums(data)>0, ]
+    if (decomposition == "relative"){
+      method = phy.H.rel
+    }else if (decomposition == "absolute"){
+      method = phy.H.abs
     }
-  }else if (type == "est"){
-    wk <- colSums(dat)/sum(dat) #size weight
+    
+    rtip <- PDtree$tip.label[!PDtree$tip.label %in% rownames(dat)]
+    rtree <- drop.tip(PDtree, rtip)
+    tmp <- TranMul(dat, rtree)
+    rtreephy <- newick2phylog(convToNewick(rtree))
+    
+    if (type == "mle"){
+      if (inherits(weight, "numeric")){
+        wk <- weight/sum(weight)
+      } else if (weight == "size"){
+        wk <- colSums(dat)/sum(dat) #size weight
+      } else if (weight == "equal"){
+        wk <- rep(1/ncol(dat), ncol(dat)) #equal weight
+      }
+    }else if (type == "est"){
+      wk <- colSums(dat)/sum(dat) #size weight
+    }
+    
+    est <- sapply(q, function(i) method(dat, tmp, i, rtreephy, wk, type))
+    
+    if(nboot != 0){
+      boot.est <- bootstrap.q.Beta(data = dat, rtree = rtree, tmp = tmp, q = q, nboot = nboot, wk = wk, type, method)
+      
+      ##
+      # test <- boot.est[seq_len(2), , ]
+      # #is.infinite(sum(boot.est))
+      # #test <- boot.est[head(seq_len(dim(boot.est)[1]),H),1,]
+      # id <- apply(test, 1:2, function(x) {
+      #   bb <- x
+      #   q1 <- quantile(bb, 0.25)
+      #   q3 <- quantile(bb, 0.75)
+      #   q1 <- q1-1.5*(q3-q1)
+      #   q3 <- q1+1.5*(q3-q1)
+      #   which(bb >= q1 & bb <= q3)
+      # })
+      # index <- Reduce(function(x,y) {intersect(x,y)}, id)
+      # boot.est <- boot.est[,,index]
+      ##
+      
+      #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]<0] <- 0
+      #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]>1] <- 1
+      #dim(boot.est)
+      #diff.boot.est <- as.data.frame(apply(boot.est,3, tail, n = H))
+      out = lapply(seq_along(q), function(i){
+        x = transconf(Bresult = boot.est[,i,], est = est[,i], conf)
+        colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
+        rownames(x) = rownames(est)
+        return(x)}) %>% do.call(rbind,.)
+      
+      Order.q = rep(q, each = 7)
+      Method = rep(rownames(out)[1:7], length(q))
+      rownames(out) = NULL
+      out = cbind(Dataset = dataset_name, Method, Order.q, as.data.frame(out), Decomposition = decomposition)
+      
+      out
+      # 
+      # CL = t(sapply(seq_len(nrow(boot.est)), function(j) transconf(matrix(boot.est[j,,], nrow=length(q)), est[j,], conf)))
+      # rownames(CL) <- rownames(est)
+      # colnames(CL) <- c(sapply(paste0("q=",q), function(k) paste(k,c("est", "bt.sd", "LCL", "UCL"), sep = "_")))
+      # 
+    }else{
+      out <- lapply(seq_along(q), function(i){
+        x = data.frame("Estimator" = est[,i], Bootstraps.e = NA, LB = NA, UB = NA) 
+        colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
+        return(x)}) %>% do.call(rbind,.)
+      
+      Order.q = rep(q, each = 7)
+      Method = rep(rownames(out)[1:7], length(q))
+      rownames(out) = NULL
+      
+      out = cbind(Dataset = dataset_name, Method, Order.q, as.data.frame(out), Decomposition = decomposition)
+      out$'Bootstrap S.E.' = as.numeric(out$'Bootstrap S.E.')
+      out$LCL = as.numeric(out$LCL)
+      out$UCL = as.numeric(out$UCL)
+      
+      out
+    }
   }
   
-  est <- sapply(q, function(i) method(dat, tmp, i, rtreephy, wk, type))
+  output = lapply(1:length(data_list), function(i) 
+    for_each_dataset(data = data_list[[i]], dataset_name = dataset_names[i]))
   
-  if(nboot != 0){
-    boot.est <- bootstrap.q.Beta(data = dat, rtree = rtree, tmp = tmp, q = q, nboot = nboot, wk = wk, type, method)
-    
-    ##
-    # test <- boot.est[seq_len(2), , ]
-    # #is.infinite(sum(boot.est))
-    # #test <- boot.est[head(seq_len(dim(boot.est)[1]),H),1,]
-    # id <- apply(test, 1:2, function(x) {
-    #   bb <- x
-    #   q1 <- quantile(bb, 0.25)
-    #   q3 <- quantile(bb, 0.75)
-    #   q1 <- q1-1.5*(q3-q1)
-    #   q3 <- q1+1.5*(q3-q1)
-    #   which(bb >= q1 & bb <= q3)
-    # })
-    # index <- Reduce(function(x,y) {intersect(x,y)}, id)
-    # boot.est <- boot.est[,,index]
-    ##
-    
-    #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]<0] <- 0
-    #boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ][boot.est[tail(seq_len(dim(boot.est)[1]),-2*H), ]>1] <- 1
-    #dim(boot.est)
-    #diff.boot.est <- as.data.frame(apply(boot.est,3, tail, n = H))
-    out = lapply(seq_along(q), function(i){
-      x = transconf(Bresult = boot.est[,i,], est = est[,i], conf)
-      colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
-      rownames(x) = rownames(est)
-      return(x)}) %>% do.call(rbind,.)
-    
-    Order.q = rep(q, each = 7)
-    Method = rep(rownames(out)[1:7], length(q))
-    rownames(out) = NULL
-    out = cbind(Method, Order.q, as.data.frame(out), Decomposition = decomposition)
-    
-    out
-    # 
-    # CL = t(sapply(seq_len(nrow(boot.est)), function(j) transconf(matrix(boot.est[j,,], nrow=length(q)), est[j,], conf)))
-    # rownames(CL) <- rownames(est)
-    # colnames(CL) <- c(sapply(paste0("q=",q), function(k) paste(k,c("est", "bt.sd", "LCL", "UCL"), sep = "_")))
-    # 
-  }else{
-    out <- lapply(seq_along(q), function(i){
-      x = data.frame("Estimator" = est[,i], Bootstraps.e = NA, LB = NA, UB = NA) 
-      colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
-      return(x)}) %>% do.call(rbind,.)
-    
-    Order.q = rep(q, each = 7)
-    Method = rep(rownames(out)[1:7], length(q))
-    rownames(out) = NULL
-    
-    out = cbind(Method, Order.q, as.data.frame(out), Decomposition = decomposition)
-    out$'Bootstrap S.E.' = as.numeric(out$'Bootstrap S.E.')
-    out$LCL = as.numeric(out$LCL)
-    out$UCL = as.numeric(out$UCL)
-    
-    out
+  names(output) = dataset_names
+  class(output) <- c("ObsAsyPD")
+  return(output)
+}
+
+
+#' ggplot2 extension for an ObsAsyPD object
+#'
+#' \code{ggObsAsyPD}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{ObsAsyPD}} object to plot order q against to phylogenetic diversity decomposition and dissimilarity measure.
+#'
+#' @param output the output from ObsAsyPD.
+#' @param method selection of plot type : \cr
+#' \code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr
+#' \code{type = 'D'} for plotting 4 turnover dissimilarities.
+#'
+#' @return a figure for phylogenetic diversity decomposition or dissimilarity measure.
+#'
+#' @examples
+#'
+#' data("esophagus")
+#' data("esophagus_tree")
+#' ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
+#'                            PDtree = esophagus_tree, type = "mle", decomposition = "relative")
+#' ggObsAsyPD(ObsAsyPD_output, type = "B")
+#'
+#' @export
+ggObsAsyPD <- function(output, type = "B"){
+  
+  cbPalette <- rev(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#330066", 
+                     "#CC79A7", "#0072B2", "#D55E00"))
+  
+  plot_output <- do.call(rbind, output)
+  if (type == "B") {
+    plot_output = plot_output[c(grep(c("Gamma"), plot_output$Method), 
+                                grep(c("Alpha"), plot_output$Method),
+                                grep(c("Beta"), plot_output$Method)) %>% sort(), ]
   }
+  else if (type == "D") {
+    plot_output = plot_output[grep("1-", plot_output$Method), ]
+  }
+  
+  out = ggplot(plot_output, aes(x = Order.q, y = Estimator, colour = Dataset, fill = Dataset)) + 
+    geom_line(size = 1.5) + 
+    geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Dataset), linetype = 0, alpha = 0.2) +
+    facet_grid(fct_inorder(Method) ~ ., scales = "free") + 
+    scale_colour_manual(values = cbPalette) + 
+    scale_fill_manual(values = cbPalette) +
+    theme_bw() + 
+    theme(legend.position = "bottom", legend.box = "vertical", 
+          legend.key.width = unit(1.2, "cm"), legend.title = element_blank(), 
+          legend.margin = margin(0, 0, 0, 0), legend.box.margin = margin(-10, -10, -5, -10), 
+          text = element_text(size = 16), plot.margin = unit(c(5.5, 5.5, 5.5, 5.5), "pt"),
+          strip.text = element_text(size = 15, face = "bold"), 
+          axis.title = element_text(hjust = 0.5, size = 15, face = "bold"), 
+          axis.text.x = element_text(size = 12), 
+          axis.text.y = element_text(size = 12), 
+          legend.text = element_text(size = 13)) + 
+    guides(linetype = guide_legend(keywidth = 2.5))
+  
+  if (type == "B") {
+    out = out + ylab("Phylogenetic diversity") + xlab("Order q")
+  }
+  else if (type == "D") {
+    out = out + ylab("Dissimilarity measure") + xlab("Order q")
+  }
+  
   return(out)
 }
 
@@ -289,7 +379,10 @@ hierPD <- function(data, mat, PDtree, q = seq(0, 2, 0.2), weight = "size", nboot
 #' \code{gghierPD}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{hierPD}} object to plot order q against to hierarchical phylogenetic diversity decomposition and dissimilarity measure.
 #'
 #' @param output the output from hierPD.
-#' @param method \code{(method = "A")} diversity(alpha, gamma); \code{(method = "B")} beta diversity; \code{(method = "D")} dissimilarity measure based on multiplicative decomposition.
+#' @param type selection of plot type : \cr
+#' \code{(type = "A")} diversity(alpha, gamma);  \cr
+#' \code{(type = "B")} beta diversity;  \cr
+#' \code{(type = "D")} dissimilarity measure based on multiplicative decomposition.
 #'
 #' @return a figure for hierarchical phylogenetic diversity decomposition or dissimilarity measure.
 #'
@@ -298,13 +391,18 @@ hierPD <- function(data, mat, PDtree, q = seq(0, 2, 0.2), weight = "size", nboot
 #' data("antechinus")
 #' data("antechinus_mat")
 #' data("antechinus_tree")
-#' hier_output <- hierPD(antechinus, mat = antechinus_mat, tree = antechinus_tree, q = seq(0, 2, 0.2))
-#' gghierPD(hier_output, method = "A")
+#' hier_output <- hierPD(antechinus, mat = antechinus_mat, PDtree = antechinus_tree, q = seq(0, 2, 0.2))
+#' gghierPD(hier_output, type = "A")
 #'
 #' @export
-gghierPD = function(output, method = "A"){
-  m = ifelse(method=="A", 4,
-             ifelse(method=="B", 5,
-                    ifelse(method=="D", 6, NA)))
-  gghier_phylogeny(output, method = m)
+gghierPD <- function(output, type = "A"){
+  m = ifelse(type=="A", 4,
+             ifelse(type=="B", 5,
+                    ifelse(type=="D", 6, NA)))
+  gghier_phylogeny(output, method = m) + xlab("Order q") + ylab("Estimate") +
+    theme(strip.text = element_text(size = 15, face = "bold"), 
+          axis.title = element_text(hjust = 0.5, size = 15, face = "bold"), 
+          axis.text.x = element_text(size = 12), 
+          axis.text.y = element_text(size = 12), 
+          legend.text = element_text(size = 13))
 }

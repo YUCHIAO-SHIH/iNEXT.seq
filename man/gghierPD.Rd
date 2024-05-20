@@ -4,12 +4,15 @@
 \alias{gghierPD}
 \title{ggplot2 extension for an hierPD object}
 \usage{
-gghierPD(output, method = "A")
+gghierPD(output, type = "A")
 }
 \arguments{
 \item{output}{the output from hierPD.}
 
-\item{method}{\code{(method = "A")} diversity(alpha, gamma); \code{(method = "B")} beta diversity; \code{(method = "D")} dissimilarity measure based on multiplicative decomposition.}
+\item{type}{selection of plot type : \cr
+\code{(type = "A")} diversity(alpha, gamma);  \cr
+\code{(type = "B")} beta diversity;  \cr
+\code{(type = "D")} dissimilarity measure based on multiplicative decomposition.}
 }
 \value{
 a figure for hierarchical phylogenetic diversity decomposition or dissimilarity measure.
@@ -22,7 +25,7 @@ a figure for hierarchical phylogenetic diversity decomposition or dissimilarity 
 data("antechinus")
 data("antechinus_mat")
 data("antechinus_tree")
-hier_output <- hierPD(antechinus, mat = antechinus_mat, tree = antechinus_tree, q = seq(0, 2, 0.2))
-gghierPD(hier_output, method = "A")
+hier_output <- hierPD(antechinus, mat = antechinus_mat, PDtree = antechinus_tree, q = seq(0, 2, 0.2))
+gghierPD(hier_output, type = "A")
 
 }

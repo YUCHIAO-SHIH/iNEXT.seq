@@ -11,8 +11,8 @@ ObsAsyPD(
   nboot = 10,
   conf = 0.95,
   PDtree,
-  type = c("mle", "est"),
-  decomposition = c("absolute", "relative")
+  type = "mle",
+  decomposition = "relative"
 )
 }
 \arguments{
@@ -43,7 +43,7 @@ For each dimension, by default, both the observed and asymptotic diversity estim
 
 data("esophagus")
 data("esophagus_tree")
-ObsAsyPD_output <- ObsAsyPD(esophagus$BCD, q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
+ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
                            PDtree = esophagus_tree, type = "mle", decomposition = "relative")
 
 }

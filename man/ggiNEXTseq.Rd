@@ -10,7 +10,7 @@ ggiNEXTseq(output, type = "B")
 \item{output}{the output from iNEXTseq}
 
 \item{type}{(required only when \code{base = "coverage"}), selection of plot type : \cr
-\code{type = 'B'} for plotting the gamma, alpha, and beta diversity ;  \cr
+\code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr
 \code{type = 'D'} for plotting 4 turnover dissimilarities.}
 }
 \value{
@@ -23,7 +23,7 @@ a figure for phylogenetic diversity decomposition or dissimilarity measure.
 
 data("esophagus")
 data("esophagus_tree")
-output <- iNEXTseq(esophagus$BCD, q = c(0,1,2), nboot = 0, PDtree = esophagus_tree)
+output <- iNEXTseq(esophagus[1], q = c(0,1,2), nboot = 10, PDtree = esophagus_tree)
 ggiNEXTseq(output, type = "B")
 
 }
