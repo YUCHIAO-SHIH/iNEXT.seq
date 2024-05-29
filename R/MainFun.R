@@ -328,9 +328,9 @@ ggObsAsyPD <- function(output, type = "B"){
     plot_output = plot_output[grep("1-", plot_output$Method), ]
   }
   
-  out = ggplot(plot_output, aes(x = Order.q, y = Estimator, colour = Dataset, fill = Dataset)) + 
+  out = ggplot(plot_output, aes(x = Order.q, y = Estimator, colour = fct_inorder(Dataset), fill = fct_inorder(Dataset))) + 
     geom_line(size = 1.5) + 
-    geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Dataset), linetype = 0, alpha = 0.2) +
+    geom_ribbon(aes(ymin = LCL, ymax = UCL), linetype = 0, alpha = 0.2) +
     facet_grid(fct_inorder(Method) ~ ., scales = "free") + 
     scale_colour_manual(values = cbPalette) + 
     scale_fill_manual(values = cbPalette) +
