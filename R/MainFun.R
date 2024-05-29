@@ -185,9 +185,9 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
     
     dat <- data[rowSums(data)>0, ]
     if (decomposition == "relative"){
-      method = phy.H.rel
+      method = phy.rel
     }else if (decomposition == "absolute"){
-      method = phy.H.abs
+      method = phy.abs
     }
     
     rtip <- PDtree$tip.label[!PDtree$tip.label %in% rownames(dat)]
@@ -204,6 +204,8 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
         wk <- rep(1/ncol(dat), ncol(dat)) #equal weight
       }
     }else if (type == "est"){
+      wk <- colSums(dat)/sum(dat) #size weight
+    }else {
       wk <- colSums(dat)/sum(dat) #size weight
     }
     
@@ -238,9 +240,16 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
         rownames(x) = rownames(est)
         return(x)}) %>% do.call(rbind,.)
       
-      Order.q = rep(q, each = 7)
-      Method = rep(rownames(out)[1:7], length(q))
-      rownames(out) = NULL
+      if (type == "spader"){
+        Order.q = rep(q, each = 2)
+        Method = rep(rownames(out)[1:2], length(q))
+        rownames(out) = NULL
+      }
+      else {
+        Order.q = rep(q, each = 7)
+        Method = rep(rownames(out)[1:7], length(q))
+        rownames(out) = NULL
+      }
       out = cbind(Dataset = dataset_name, Method, Order.q, as.data.frame(out), Decomposition = decomposition)
       
       out
@@ -255,9 +264,16 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
         colnames(x) = c("Estimator", "Bootstrap S.E.", "LCL", "UCL")
         return(x)}) %>% do.call(rbind,.)
       
-      Order.q = rep(q, each = 7)
-      Method = rep(rownames(out)[1:7], length(q))
-      rownames(out) = NULL
+      if (type == "spader"){
+        Order.q = rep(q, each = 2)
+        Method = rep(rownames(out)[1:2], length(q))
+        rownames(out) = NULL
+      }
+      else {
+        Order.q = rep(q, each = 7)
+        Method = rep(rownames(out)[1:7], length(q))
+        rownames(out) = NULL
+      }
       
       out = cbind(Dataset = dataset_name, Method, Order.q, as.data.frame(out), Decomposition = decomposition)
       out$'Bootstrap S.E.' = as.numeric(out$'Bootstrap S.E.')

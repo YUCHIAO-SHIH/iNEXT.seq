@@ -68,7 +68,7 @@ TranMul <- function(data, tree){
 }
 
 
-phy.H.rel <- function(dat, tmp, q, rtreephy, wk, formula){
+phy.rel <- function(dat, tmp, q, rtreephy, wk, formula){
   n <- sum(dat)
   N <- ncol(dat)
   ga <- tmp$Gamma[,1]; gL <- tmp$Gamma[,2]
@@ -87,41 +87,49 @@ phy.H.rel <- function(dat, tmp, q, rtreephy, wk, formula){
     return(abun/nk)
   }) #zik|z+k = pi|k
   wk.pik <- pik*t(replicate(B,wk)) #(zik|z+k)*wk => zik|z++ = pik
-  if(formula == "mle"){
-    qDk <- apply(pik, 2, get("mle.phy.q"), LL = gL, TT = TT, q) ##\sum{p^q} or -\sum{p*log(p)})
-    qDg <- mle.phy.q(rowSums(wk.pik), LL = gL, TT = TT, q)
-  } else if(formula == "est"){
-    qDk <- sapply(seq_len(ncol(dat)), function(k){
-      nk <- sum(dat[,k])
-      get("est.phy.q")(xx = aa[,k], LL = gL, TT = TT, n = nk, q, rtreephy)
-    })
-    qDg <- est.phy.q(xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
-  }
-  if(q!=1){
-    alpha.R <- (wk%*%qDk)^(1/(1-q))
-    joint.R <- (wk^q%*%qDk)^(1/(1-q))
-    gamma.R <- qDg^(1/(1-q))
-  } else{
-    alpha.R <- exp(wk%*%(qDk/TT+log(TT)))
-    joint.R <- exp(-wk%*%log(wk) + wk%*%(qDk/TT+log(TT)))
-    gamma.R <- exp(qDg/TT+log(TT))
-  }
-  beta.R <- gamma.R/alpha.R
-  betamax.R <- joint.R/alpha.R
   
-  ifelse(q==1, C_1 <- log(beta.R)/log(betamax.R), C_1 <- (beta.R^(1-q)-1)/(betamax.R^(1-q)-1))
-  ifelse(q==1, U_1 <- log(beta.R)/log(betamax.R), U_1 <- (beta.R^(q-1)-1)/(betamax.R^(q-1)-1))
-  U_1/C_1
-  V_1 <- (beta.R-1)/(betamax.R-1)
-  S_1 <- (beta.R^-1-1)/(betamax.R^-1-1)
-  diff <- c("1-CqN" = C_1, "1-UqN" = U_1, "1-VqN" = V_1, "1-SqN" = S_1)
-  out <- c("Gamma" = gamma.R, "Alpha" = alpha.R, "Beta" = beta.R, diff)
+  if (formula == "spader"){
+    nk <- colSums(dat)
+    diff <- est.spader(xa = aa, xg = ga, LL = gL, TT = TT, nk = nk, wk = wk, q, rtreephy)
+    
+    out <- c("1-CqN" = diff$C_1, "1-UqN" = diff$U_1)
+  } else {
+    if (formula == "mle"){
+      qDk <- apply(pik, 2, get("mle.phy.q"), LL = gL, TT = TT, q) ##sum{p^q} or -sum{p*log(p)})
+      qDg <- mle.phy.q(rowSums(wk.pik), LL = gL, TT = TT, q)
+    } else if(formula == "est"){
+      qDk <- sapply(seq_len(ncol(dat)), function(k){
+        nk <- sum(dat[,k])
+        get("est.phy.q")(xx = aa[,k], LL = gL, TT = TT, n = nk, q, rtreephy)
+      })
+      qDg <- est.phy.q(xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
+    }
+    if (q!=1) {
+      alpha.R <- (wk%*%qDk)^(1/(1-q))
+      joint.R <- (wk^q%*%qDk)^(1/(1-q))
+      gamma.R <- qDg^(1/(1-q))
+    } else {
+      alpha.R <- exp(wk%*%(qDk/TT+log(TT)))
+      joint.R <- exp(-wk%*%log(wk) + wk%*%(qDk/TT+log(TT)))
+      gamma.R <- exp(qDg/TT+log(TT))
+    }
+    beta.R <- gamma.R/alpha.R
+    betamax.R <- joint.R/alpha.R
+    
+    ifelse(q==1, C_1 <- log(beta.R)/log(betamax.R), C_1 <- (beta.R^(1-q)-1)/(betamax.R^(1-q)-1))
+    ifelse(q==1, U_1 <- log(beta.R)/log(betamax.R), U_1 <- (beta.R^(q-1)-1)/(betamax.R^(q-1)-1))
+    U_1/C_1
+    V_1 <- (beta.R-1)/(betamax.R-1)
+    S_1 <- (beta.R^-1-1)/(betamax.R^-1-1)
+    diff <- c("1-CqN" = C_1, "1-UqN" = U_1, "1-VqN" = V_1, "1-SqN" = S_1)
+    out <- c("Gamma" = gamma.R, "Alpha" = alpha.R, "Beta" = beta.R, diff)
+  }
   
   return(out)
 }
 
 
-phy.H.abs <- function(dat, tmp, q, rtreephy, wk, formula){
+phy.abs <- function(dat, tmp, q, rtreephy, wk, formula){
   n <- sum(dat)
   N <- ncol(dat)
   ga <- tmp$Gamma[,1]; gL <- tmp$Gamma[,2]
@@ -213,7 +221,7 @@ est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
   if(q==0){
     
     ##chunyu revise##
-    ans = PD_obs + ifelse(g2>(g1*f2)/(2*f2), (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/(2*(f2+1)))
+    ans = PD_obs + ifelse((2*f2)*g2>(g1*f2), (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/(2*(f2+1)))
     #ans = PD_obs + ifelse(g2>0, (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/2*(f2-1))
     
   }else if(q==1){
@@ -237,6 +245,70 @@ est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
 }
 
 
+est.spader <- function(xa, xg, LL, TT, nk, wk, q, rtreephy){
+  Xip = xg
+  Xik = xa
+  Li = LL
+  N = ncol(Xik)
+  
+  if (q == 1) {
+    W = sum(-wk * log(wk))
+    r.data = sapply(1:N, function(k) Xik[, k]/nk[k]) #pik
+    r.pool = c(r.data %*% wk)
+    U = numeric(N)
+    K = numeric(N)
+    for (k in 1:N) {
+      I = which(Xik[, k] * (rowSums(Xik) - Xik[, k]) > 0)
+      is = Xik[, k][I]
+      L.is = Li[I]
+      pools = rowSums(Xik)[I] - is
+      r.is = is/nk[k]
+      r.pools = r.pool[I]
+      U1 = sum(L.is * r.is)
+      sf1 = sum(pools == 1)
+      sf2 = sum(pools == 2)
+      sf2 = ifelse(sf2 == 0, 1, sf2)
+      U2 = sum(L.is[pools == 1] * r.is[pools == 1]) * (sf1/(2 * sf2))
+      U[k] = max(0, 1 - U1 - U2) * (-wk[k] * log(wk[k]))
+      K[k] = -sum(L.is * wk[k] * r.is * log(r.pools/r.is))
+    }
+    est = (sum(U) + sum(K))/W
+    C_1 = est
+    U_1 = est
+  }
+  else if (q == 0){
+    PDk <- sapply(1:N, function(k){
+      get("est.phy.q")(xx = Xik[,k], LL = Li, TT = TT, n = nk[k], q, rtreephy)
+    })
+    PD <- est.phy.q(xx = Xip, LL = Li, TT = TT, n = sum(nk), q, rtreephy)
+    C_1 = (PD-sum(wk*PDk))/sum((1-wk)*PDk)
+    U_1 = (PD-sum(wk*PDk))/(1-sum(wk*PDk)/sum(PDk))/PD
+  }
+  else if (q == 2){
+    qDk = sapply(1:N, function(k) 
+      sum(Li * Xik[, k] * (Xik[, k] - 1)/(nk[k] * (nk[k] - 1))))
+    pik = sapply(1:N, function(k) Xik[,k]/nk[k])
+    pik.1 = sapply(1:N, function(k) (Xik[,k]-1)/(nk[k]-1))
+    temp = sapply(1:nrow(pik), function(i)
+      (sum((pik[i, ] %*% t(pik[i, ]))*(wk %*% t(wk))) - sum((pik[i, ]*wk)^2)) + sum(pik[i, ]*pik.1[i, ]*wk^2))
+    
+    alpha.R <- (wk%*%qDk/TT^2)^(-1)
+    joint.R <- (wk^2%*%qDk/TT^2)^(-1)
+    gamma.R <- (sum(Li * temp)/TT^2)^(-1)
+    
+    beta.R <- gamma.R/alpha.R
+    betamax.R <- joint.R/alpha.R
+    
+    C_1 = (beta.R^(-1)-1)/(betamax.R^(-1)-1)
+    U_1 = (beta.R-1)/(betamax.R-1)
+  }
+  else {C_1 = NA; U_1 = NA}
+  
+  out = list(C_1 = C_1, U_1 = U_1)
+  return(out)
+}
+
+
 delta <- function(data, k, n, A){
   ans = sapply(1:length(k), function(i){
     if(k[i]<n){
@@ -253,7 +325,9 @@ delta <- function(data, k, n, A){
 
 
 bootstrap.q.Beta <- function(data, rtree, tmp, q, nboot, wk, formula, method){
-  out = array(0, dim = c(7, length(q), nboot))
+  if (formula == "spader"){
+    out = array(0, dim = c(2, length(q), nboot))
+  } else out = array(0, dim = c(7, length(q), nboot))
   pool <- rowSums(data)
   rtreephy <- newick2phylog(convToNewick(rtree))
   #if(datatype == "abundance"){
@@ -276,6 +350,8 @@ bootstrap.q.Beta <- function(data, rtree, tmp, q, nboot, wk, formula, method){
     for (j in 1:ncol(p)) boot.data[,j] = rmultinom(1, n[j], p[,j])
     rownames(boot.data) <- rownames(p)
     unseen = boot.data[-(1:S),]
+    ###Chunyu revised
+    if(is.vector(unseen)) unseen = matrix(unseen, nrow = 1) %>% `row.names<-`("u1")
     boot.data.obs <- boot.data[1:S,]
     #boot.data.obs <- boot.data.obs[rowSums(boot.data.obs)>0, ]
     #tip.boot <- names(rtreephy$leaves)[!names(rtreephy$leaves)%in%rownames(boot.data.obs)]
