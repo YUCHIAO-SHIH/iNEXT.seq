@@ -88,22 +88,26 @@ phy.rel <- function(dat, tmp, q, rtreephy, wk, formula){
   }) #zik|z+k = pi|k
   wk.pik <- pik*t(replicate(B,wk)) #(zik|z+k)*wk => zik|z++ = pik
   
+  ##chunyu revise##
   if (formula == "spader"){
     nk <- colSums(dat)
     diff <- est.spader(xa = aa, xg = ga, LL = gL, TT = TT, nk = nk, wk = wk, q, rtreephy)
-    
     out <- c("1-CqN" = diff$C_1, "1-UqN" = diff$U_1)
-  } else {
+  }
+  
+  else {
     if (formula == "mle"){
       qDk <- apply(pik, 2, get("mle.phy.q"), LL = gL, TT = TT, q) ##sum{p^q} or -sum{p*log(p)})
       qDg <- mle.phy.q(rowSums(wk.pik), LL = gL, TT = TT, q)
-    } else if(formula == "est"){
+    }
+    else if(formula == "est"){
       qDk <- sapply(seq_len(ncol(dat)), function(k){
         nk <- sum(dat[,k])
         get("est.phy.q")(xx = aa[,k], LL = gL, TT = TT, n = nk, q, rtreephy)
       })
       qDg <- est.phy.q(xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
     }
+    
     if (q!=1) {
       alpha.R <- (wk%*%qDk)^(1/(1-q))
       joint.R <- (wk^q%*%qDk)^(1/(1-q))
@@ -118,7 +122,7 @@ phy.rel <- function(dat, tmp, q, rtreephy, wk, formula){
     
     ifelse(q==1, C_1 <- log(beta.R)/log(betamax.R), C_1 <- (beta.R^(1-q)-1)/(betamax.R^(1-q)-1))
     ifelse(q==1, U_1 <- log(beta.R)/log(betamax.R), U_1 <- (beta.R^(q-1)-1)/(betamax.R^(q-1)-1))
-    U_1/C_1
+
     V_1 <- (beta.R-1)/(betamax.R-1)
     S_1 <- (beta.R^-1-1)/(betamax.R^-1-1)
     diff <- c("1-CqN" = C_1, "1-UqN" = U_1, "1-VqN" = V_1, "1-SqN" = S_1)
@@ -146,15 +150,16 @@ phy.abs <- function(dat, tmp, q, rtreephy, wk, formula){
   if(formula == "mle"){
     qDa <- mle.phy.q(c(pik), LL = rep(gL, N), TT = TT, q) ##\sum{p^q} or -\sum{p*log(p)})
     qDg <- mle.phy.q(gp, LL = gL, TT = TT, q)
-  } else if(formula == "est"){
-    aa_joint <- c(aa) %>% `names<-`(rep(rownames(aa), N))
-    qDa <- est.phy.q(xx = aa_joint, LL = rep(gL, N), TT = TT, n = n, q, rtreephy)
+  }
+  else if(formula == "est"){
+    #aa_joint <- c(aa) %>% `names<-`(rep(rownames(aa), N))
+    qDa <- est.phy.q.joint(xx = aa, LL = gL, TT = TT, n = n, q, rtreephy)
     qDg <- est.phy.q(xx = ga, LL = gL, TT = TT, n = n, q, rtreephy)
   }
-  if(q!=1){
+  if(q!=1) {
     alpha.C <- qDa^(1/(1-q))/N
     gamma.C <- qDg^(1/(1-q))
-  } else{
+  } else {
     alpha.C <- exp(qDa/TT+log(TT))/N
     gamma.C <- exp(qDg/TT+log(TT))
   }
@@ -209,6 +214,80 @@ est.phy.q <- function(xx, LL, TT, n, q, rtreephy){ # proposed
     })
     f1 <- f1 - sum(rep1)
   }
+  if(f2 > 0){
+    A = 2*f2/((n-1)*f1+2*f2)
+  }else if(f2 == 0 & f1 > 0){
+    A = 2/((n-1)*(f1-1)+2)
+  }else{
+    A = 1
+  }
+  t_bar <- sum(xx*LL/n)
+  
+  if(q==0){
+    
+    ##chunyu revise##
+    ans = PD_obs + ifelse((2*f1)*g2>(g1*f2), (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/(2*(f2+1)))
+    #ans = PD_obs + ifelse(g2>0, (n-1)/n*g1^2/(2*g2), (n-1)/n*g1*(f1-1)/2*(f2-1))
+    
+  }else if(q==1){
+    q1 = sum(sapply(1:(n-1), function(r) {(1-A)^r/r} ))
+    if(A < 1) h2 = (g1/n)*((1-A)^(-n+1))*(-log(A)-q1)
+    if(A == 1) h2 = 0
+    tmp2 = subset(tmp, tmp[,1]>=1 & tmp[,1]<=(n-1) )
+    tmp2 = cbind(tmp2, sapply(tmp2[,1], function(x) sum( 1/(x:(n-1)))))
+    h1 = sum(apply(tmp2, 1, prod))/n
+    h = h1+h2
+    ans = h
+  } else{
+    r = 0 : (n-1)
+    de = delta(tmp, r , n , A)
+    a = sum( choose(q-1, r)*(-1)^r*de )/((t_bar)^q)
+    if(A < 1) b = (g1*((1-A)^(1-n))/n)*(A^(q-1)-sum(choose(q-1, r)*(A-1)^r))/((t_bar)^q)
+    if(A == 1) b = 0
+    ans = a+b
+  }
+  return( ans )
+}
+
+
+est.phy.q.joint <- function(xx, LL, TT, n, q, rtreephy){ # proposed
+  N <- ncol(xx)
+  
+  #each assemblage calculate once f1, f2
+  f12 <- sapply(1:N, function(k){
+    xxk <- xx[,k]
+    LLk <- LL[names(xxk)]
+    tmp <- data.frame(abun = xxk, length = LLk)
+    #f1 <- ifelse(datatype=='incidence', sum(rowSums(data)==1), sum(data==1) )
+    f1 = sum(tmp[, 1]==1)
+    f2 = sum(tmp[, 1]==2)
+    node <- names(rtreephy$parts)
+    node2 = names(xxk)[xxk==2][names(xxk)[xxk==2] %in% node]
+    if(length(node2)>0){
+      rep2 <- sapply(node2, function(tx){
+        sum(xxk[rtreephy$parts[[tx]]] %in% c(2,0)) == length(rtreephy$parts[[tx]])
+      })
+      f2 <- f2 - sum(rep2)
+    }
+    node1 = names(xxk)[xxk==1][names(xxk)[xxk==1] %in% node]
+    if(length(node1)>0){
+      rep1 <- sapply(node1, function(tx){
+        sum(xxk[rtreephy$parts[[tx]]] %in% c(1,0)) == length(rtreephy$parts[[tx]])
+      })
+      f1 <- f1 - sum(rep1)
+    }
+    return(c(f1,f2))
+  }) %>% rowSums()
+  
+  xx <- c(xx) %>% `names<-`(rep(rownames(xx), N))
+  LL <- rep(LL, N)
+  LL <- LL[names(xx)]
+  tmp <- data.frame(abun = xx, length = LL)
+  PD_obs <- sum(tmp[tmp[,1]>0,2])
+  g1 = sum(tmp[tmp[, 1]==1, 2])
+  g2 = sum(tmp[tmp[, 1]==2, 2])
+  f1 <- f12[1]; f2 <- f12[2]
+  
   if(f2 > 0){
     A = 2*f2/((n-1)*f1+2*f2)
   }else if(f2 == 0 & f1 > 0){

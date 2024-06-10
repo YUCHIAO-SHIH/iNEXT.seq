@@ -10,7 +10,7 @@ hierPD(
   PDtree,
   q = seq(0, 2, 0.2),
   weight = "size",
-  nboot = 20,
+  nboot = 10,
   conf = 0.95,
   type = "mle",
   decomposition = "relative"
@@ -27,7 +27,7 @@ hierPD(
 
 \item{weight}{weight for relative decomposition. Default is \code{"size"}.}
 
-\item{nboot}{a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{20}.}
+\item{nboot}{a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.}
 
 \item{conf}{a positive number < 1 specifying the level of confidence interval. Default is \code{0.95}.}
 
@@ -43,9 +43,9 @@ a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) 
 }
 \examples{
 
-data("antechinus")
-data("antechinus_mat")
-data("antechinus_tree")
-hier_output <- hierPD(antechinus, mat = antechinus_mat, PDtree = antechinus_tree, q = seq(0, 2, 0.2))
+data("wetland")
+data("wetland_mat")
+data("wetland_tree")
+hier_output <- hierPD(wetland, mat = wetland_mat, PDtree = wetland_tree, q = seq(0, 2, 0.2))
 
 }

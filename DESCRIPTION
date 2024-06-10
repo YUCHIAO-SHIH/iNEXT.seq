@@ -3,7 +3,7 @@ Type: Package
 Title: Interpolation and Extrapolation for phylogenetic beta diversity and dissimilarity measure for genetic sequence data
 Version: 0.1.0
 Author: YaYun Teng & ChunYu Yeh
-Maintainer: YaYun Teng <jewel860911@gmail.com>
+Maintainer: ChunYu Yeh <881204ian@gmail.com>
 Description: iNEXT.seq provides the function to calculate beta diversity and dissimilarity measure for multiple assemblages.
 Depends: R (>= 4.0)
 Imports: tidyverse,

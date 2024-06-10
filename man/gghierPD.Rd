@@ -22,10 +22,10 @@ a figure for hierarchical phylogenetic diversity decomposition or dissimilarity 
 }
 \examples{
 
-data("antechinus")
-data("antechinus_mat")
-data("antechinus_tree")
-hier_output <- hierPD(antechinus, mat = antechinus_mat, PDtree = antechinus_tree, q = seq(0, 2, 0.2))
+data("wetland")
+data("wetland_mat")
+data("wetland_tree")
+hier_output <- hierPD(wetland, mat = wetland_mat, PDtree = wetland_tree, q = seq(0, 2, 0.2))
 gghierPD(hier_output, type = "A")
 
 }
