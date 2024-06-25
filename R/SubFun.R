@@ -125,7 +125,7 @@ phy.rel <- function(dat, tmp, q, rtreephy, wk, formula){
 
     V_1 <- (beta.R-1)/(betamax.R-1)
     S_1 <- (beta.R^-1-1)/(betamax.R^-1-1)
-    diff <- c("1-CqN" = C_1, "1-UqN" = U_1, "1-VqN" = V_1, "1-SqN" = S_1)
+    diff <- c("1-CqN*" = C_1, "1-UqN*" = U_1, "1-VqN*" = V_1, "1-SqN*" = S_1)
     out <- c("Gamma" = gamma.R, "Alpha" = alpha.R, "Beta" = beta.R, diff)
   }
   
@@ -429,7 +429,7 @@ bootstrap.q.Beta <- function(data, rtree, tmp, q, nboot, wk, formula, method){
     for (j in 1:ncol(p)) boot.data[,j] = rmultinom(1, n[j], p[,j])
     rownames(boot.data) <- rownames(p)
     unseen = boot.data[-(1:S),]
-    ###Chunyu revised
+    ##chunyu revise##
     if(is.vector(unseen)) unseen = matrix(unseen, nrow = 1) %>% `row.names<-`("u1")
     boot.data.obs <- boot.data[1:S,]
     #boot.data.obs <- boot.data.obs[rowSums(boot.data.obs)>0, ]

@@ -7,11 +7,11 @@
 hierPD(
   data,
   mat,
-  PDtree,
   q = seq(0, 2, 0.2),
   weight = "size",
   nboot = 10,
   conf = 0.95,
+  PDtree,
   type = "mle",
   decomposition = "relative"
 )
@@ -21,31 +21,31 @@ hierPD(
 
 \item{mat}{hierarchical structure of data should be input as a \code{matrix}.}
 
-\item{PDtree}{a phylogenetic tree in Newick format for all observed species in the pooled assemblage.}
-
 \item{q}{a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.}
 
-\item{weight}{weight for relative decomposition. Default is \code{"size"}.}
+\item{weight}{(required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.}
 
 \item{nboot}{a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.}
 
 \item{conf}{a positive number < 1 specifying the level of confidence interval. Default is \code{0.95}.}
 
-\item{type}{estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.}
+\item{PDtree}{a phylogenetic tree in Newick format for all observed species in the pooled assemblage.}
 
-\item{decomposition}{relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.}
+\item{type}{estimate type: empirical \code{(type = "mle")} or asymptotic estimate \code{(type = "est")}. Default is \code{"mle"}.}
+
+\item{decomposition}{decomposition type: relative \code{(decomposition = "relative")} or absolute decomposition \code{(decomposition = "absolute")}. Default is \code{"relative"}.}
 }
 \value{
 a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
 }
 \description{
-\code{hierPD}: function to calculate empirical estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure
+\code{hierPD}: function to calculate empirical estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure.
 }
 \examples{
 
 data("wetland")
 data("wetland_mat")
 data("wetland_tree")
-hier_output <- hierPD(wetland, mat = wetland_mat, PDtree = wetland_tree, q = seq(0, 2, 0.2))
+hier_output <- hierPD(wetland, mat = wetland_mat, q = seq(0, 2, 0.2), PDtree = wetland_tree)
 
 }

@@ -23,8 +23,7 @@ a figure for phylogenetic diversity decomposition or dissimilarity measure.
 
 data("esophagus")
 data("esophagus_tree")
-ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
-                           PDtree = esophagus_tree, type = "mle", decomposition = "relative")
+ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), PDtree = esophagus_tree)
 ggObsAsyPD(ObsAsyPD_output, type = "B")
 
 }

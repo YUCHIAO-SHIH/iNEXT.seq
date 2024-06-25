@@ -39,7 +39,7 @@ the corresponding beta diversity is computed up to the same maximum coverage as 
 If \code{base = "coverage"}, return a list of seven data frames with three coverage-based diversity (gamma, alpha, and beta) and four types dissimilarity measure. If \code{base = "size"}, return a list of two data frames with two diversity (gamma and alpha).
 }
 \description{
-\code{iNEXTseq}: function to calculate interpolation and extrapolation for phylogenetic gamma, alpha, beta diversity and dissimilarity measure
+\code{iNEXTseq}: function to calculate interpolation and extrapolation for phylogenetic gamma, alpha, beta diversity and dissimilarity measure.
 }
 \examples{
 

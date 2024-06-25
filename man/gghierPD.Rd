@@ -25,7 +25,7 @@ a figure for hierarchical phylogenetic diversity decomposition or dissimilarity 
 data("wetland")
 data("wetland_mat")
 data("wetland_tree")
-hier_output <- hierPD(wetland, mat = wetland_mat, PDtree = wetland_tree, q = seq(0, 2, 0.2))
+hier_output <- hierPD(wetland, mat = wetland_mat, q = seq(0, 2, 0.2), PDtree = wetland_tree)
 gghierPD(hier_output, type = "A")
 
 }

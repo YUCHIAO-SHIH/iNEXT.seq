@@ -1,6 +1,6 @@
 #' function to calculate phylogenetic gamma, alpha, beta diversity and dissimilarity measure
 #'
-#' \code{iNEXTseq}: function to calculate interpolation and extrapolation for phylogenetic gamma, alpha, beta diversity and dissimilarity measure
+#' \code{iNEXTseq}: function to calculate interpolation and extrapolation for phylogenetic gamma, alpha, beta diversity and dissimilarity measure.
 #'
 #' @param data OTU data can be input as a \code{matrix/data.frame} (species by assemblages), or a \code{list} of \code{matrices/data.frames}, each matrix represents species-by-assemblages abundance matrix.\cr
 #' @param q a numerical vector specifying the diversity orders. Default is c(0, 1, 2).
@@ -44,6 +44,7 @@
 #'
 #' @export
 iNEXTseq <- function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 10, conf = 0.95, PDtree = NULL, PDreftime = NULL){
+  
   out = iNEXTbeta3D(data, diversity = "PD", q = q, datatype = "abundance", base = base, 
                     level = level, nboot = nboot, conf = conf, PDtype = "PD", 
                     PDtree = PDtree, PDreftime = PDreftime)
@@ -70,7 +71,7 @@ iNEXTseq <- function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 
 #'
 #' \code{ggiNEXTseq}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{iNEXTseq}} object to plot coverage- or sample-sized-based rarefaction/extrapolation curves for phylogenetic diversity decomposition and dissimilarity measure.
 #'
-#' @param output the output from iNEXTseq
+#' @param output the output from iNEXTseq.
 #' @param type (required only when \code{base = "coverage"}), selection of plot type : \cr
 #' \code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr
 #' \code{type = 'D'} for plotting 4 turnover dissimilarities.
@@ -86,6 +87,7 @@ iNEXTseq <- function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 
 #'
 #' @export
 ggiNEXTseq <- function(output, type = "B"){
+  
   ggiNEXTbeta3D(output, type = type)
 
   # cbPalette <- rev(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#330066", "#CC79A7", "#0072B2", "#D55E00"))
@@ -138,29 +140,27 @@ ggiNEXTseq <- function(output, type = "B"){
 }
 
 
-#' Asymptotic and observed phylogenetic gamma, alpha, beta diversity and dissimilarity of order q
+#' function to calculate observed or asymptotic phylogenetic gamma, alpha, beta diversity and dissimilarity of order q
 #' 
 #' \code{ObsAsyPD} computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for phylogenetic gamma, alpha, beta diversity and dissimilarity; these values with different order q can be used to depict a q-profile in the \code{ggObsAsyPD} function.\cr\cr 
 #' For each dimension, by default, both the observed and asymptotic diversity estimates will be computed.
 #' 
 #' @param data OTU data can be input as a \code{matrix/data.frame} (species by assemblages), or a \code{list} of \code{matrices/data.frames}, each matrix represents species-by-assemblages abundance matrix.\cr
-#' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, by = 0.2)}.
-#' @param weight weight for relative decomposition. Default is \code{"size"}. For \code{(type = "est")} only use size weight.
+#' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.
+#' @param weight (required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.
 #' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.
 #' @param conf a positive number < 1 specifying the level of confidence interval. Default is 0.95.
 #' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
-#' @param type estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.
-#' @param decomposition relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.
+#' @param type estimate type: empirical \code{(type = "mle")} or asymptotic estimate \code{(type = "est")}. Default is \code{"mle"}.
+#' @param decomposition decomposition type: relative \code{(decomposition = "relative")} or absolute decomposition \code{(decomposition = "absolute")}. Default is \code{"relative"}.
 #' 
-#' @return a data frames with asymptotic or observed phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
-#' 
+#' @return a data frames with observed or asymptotic phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
 #' 
 #' @examples
 #' 
 #' data("esophagus")
 #' data("esophagus_tree")
-#' ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
-#'                            PDtree = esophagus_tree, type = "mle", decomposition = "relative")
+#' ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), PDtree = esophagus_tree)
 #' 
 #' @export
 ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
@@ -308,8 +308,7 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
 #'
 #' data("esophagus")
 #' data("esophagus_tree")
-#' ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
-#'                            PDtree = esophagus_tree, type = "mle", decomposition = "relative")
+#' ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), PDtree = esophagus_tree)
 #' ggObsAsyPD(ObsAsyPD_output, type = "B")
 #'
 #' @export
@@ -359,17 +358,17 @@ ggObsAsyPD <- function(output, type = "B"){
 
 #' function to calculate hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure
 #'
-#' \code{hierPD}: function to calculate empirical estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure
+#' \code{hierPD}: function to calculate empirical estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure.
 #'
 #' @param data data should be input as a \code{matrix/data.frame} (species by assemblages).
 #' @param mat hierarchical structure of data should be input as a \code{matrix}.
-#' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
 #' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.
-#' @param weight weight for relative decomposition. Default is \code{"size"}.
+#' @param weight (required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.
 #' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.
 #' @param conf a positive number < 1 specifying the level of confidence interval. Default is \code{0.95}.
-#' @param type estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.
-#' @param decomposition relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.
+#' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
+#' @param type estimate type: empirical \code{(type = "mle")} or asymptotic estimate \code{(type = "est")}. Default is \code{"mle"}.
+#' @param decomposition decomposition type: relative \code{(decomposition = "relative")} or absolute decomposition \code{(decomposition = "absolute")}. Default is \code{"relative"}.
 #'
 #' @return a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
 #'
@@ -378,15 +377,23 @@ ggObsAsyPD <- function(output, type = "B"){
 #' data("wetland")
 #' data("wetland_mat")
 #' data("wetland_tree")
-#' hier_output <- hierPD(wetland, mat = wetland_mat, PDtree = wetland_tree, q = seq(0, 2, 0.2))
+#' hier_output <- hierPD(wetland, mat = wetland_mat, q = seq(0, 2, 0.2), PDtree = wetland_tree)
 #'
 #' @export
-hierPD <- function(data, mat, PDtree, q = seq(0, 2, 0.2), weight = "size", nboot = 10,
-                   conf = 0.95, type = "mle", decomposition = "relative"){
+hierPD <- function(data, mat, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95, 
+                   PDtree, type = "mle", decomposition = "relative"){
+  
   hier_method = c("qPD", "1-C", "1-U", "1-V", "1-S")
   out = hier.phylogeny(data, mat, tree = PDtree, q = q, weight = weight, nboot = nboot,
                        conf = conf, type = type, decomposition = decomposition)
-  out[str_sub(out$Method, 1, 3) %in% hier_method, ]
+  out = out[str_sub(out$Method, 1, 3) %in% hier_method, ]
+  
+  if (decomposition == "relative"){
+    diss_method = out$Method[str_sub(out$Method, 1, 3) %in% hier_method[-1]]
+    out$Method[str_sub(out$Method, 1, 3) %in% hier_method[-1]] = paste0(str_sub(diss_method, 1, 5), "*", str_sub(diss_method, 6))
+  }
+  
+  out
 }
 
 
@@ -407,14 +414,16 @@ hierPD <- function(data, mat, PDtree, q = seq(0, 2, 0.2), weight = "size", nboot
 #' data("wetland")
 #' data("wetland_mat")
 #' data("wetland_tree")
-#' hier_output <- hierPD(wetland, mat = wetland_mat, PDtree = wetland_tree, q = seq(0, 2, 0.2))
+#' hier_output <- hierPD(wetland, mat = wetland_mat, q = seq(0, 2, 0.2), PDtree = wetland_tree)
 #' gghierPD(hier_output, type = "A")
 #'
 #' @export
 gghierPD <- function(output, type = "A"){
+  
   m = ifelse(type=="A", 4,
              ifelse(type=="B", 5,
                     ifelse(type=="D", 6, NA)))
+  
   gghier_phylogeny(output, method = m) + xlab("Order q") + ylab("Estimate") +
     theme(strip.text = element_text(size = 15, face = "bold"), 
           axis.title = element_text(hjust = 0.5, size = 15, face = "bold"), 

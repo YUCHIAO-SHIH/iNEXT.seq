@@ -7,7 +7,7 @@
 ggiNEXTseq(output, type = "B")
 }
 \arguments{
-\item{output}{the output from iNEXTseq}
+\item{output}{the output from iNEXTseq.}
 
 \item{type}{(required only when \code{base = "coverage"}), selection of plot type : \cr
 \code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr

@@ -2,7 +2,7 @@
 % Please edit documentation in R/MainFun.R
 \name{ObsAsyPD}
 \alias{ObsAsyPD}
-\title{Asymptotic and observed phylogenetic gamma, alpha, beta diversity and dissimilarity of order q}
+\title{function to calculate observed or asymptotic phylogenetic gamma, alpha, beta diversity and dissimilarity of order q}
 \usage{
 ObsAsyPD(
   data,
@@ -18,9 +18,9 @@ ObsAsyPD(
 \arguments{
 \item{data}{OTU data can be input as a \code{matrix/data.frame} (species by assemblages), or a \code{list} of \code{matrices/data.frames}, each matrix represents species-by-assemblages abundance matrix.\cr}
 
-\item{q}{a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, by = 0.2)}.}
+\item{q}{a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.}
 
-\item{weight}{weight for relative decomposition. Default is \code{"size"}. For \code{(type = "est")} only use size weight.}
+\item{weight}{(required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.}
 
 \item{nboot}{a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.}
 
@@ -28,12 +28,12 @@ ObsAsyPD(
 
 \item{PDtree}{a phylogenetic tree in Newick format for all observed species in the pooled assemblage.}
 
-\item{type}{estimate type: estimate \code{(type = "est")}, empirical estimate \code{(type = "mle")}. Default is \code{"mle"}.}
+\item{type}{estimate type: empirical \code{(type = "mle")} or asymptotic estimate \code{(type = "est")}. Default is \code{"mle"}.}
 
-\item{decomposition}{relative decomposition: \code{(decomposition = "relative")}, Absolute decomposition: \code{(decomposition = "absolute")}. Default is \code{"relative"}.}
+\item{decomposition}{decomposition type: relative \code{(decomposition = "relative")} or absolute decomposition \code{(decomposition = "absolute")}. Default is \code{"relative"}.}
 }
 \value{
-a data frames with asymptotic or observed phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
+a data frames with observed or asymptotic phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
 }
 \description{
 \code{ObsAsyPD} computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for phylogenetic gamma, alpha, beta diversity and dissimilarity; these values with different order q can be used to depict a q-profile in the \code{ggObsAsyPD} function.\cr\cr 
@@ -43,7 +43,6 @@ For each dimension, by default, both the observed and asymptotic diversity estim
 
 data("esophagus")
 data("esophagus_tree")
-ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), weight = "size", nboot = 10, 
-                           PDtree = esophagus_tree, type = "mle", decomposition = "relative")
+ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), PDtree = esophagus_tree)
 
 }
