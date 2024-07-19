@@ -10,14 +10,14 @@ ggObsAsyPD(output, type = "B")
 \item{output}{the output from ObsAsyPD.}
 
 \item{method}{selection of plot type : \cr
-\code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr
-\code{type = 'D'} for plotting 4 turnover dissimilarities.}
+\code{type = "B"} for plotting the gamma, alpha, and beta diversity;  \cr
+\code{type = "D"} for plotting 4 turnover dissimilarities.}
 }
 \value{
 a figure for phylogenetic diversity decomposition or dissimilarity measure.
 }
 \description{
-\code{ggObsAsyPD}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{ObsAsyPD}} object to plot order q against to phylogenetic diversity decomposition and dissimilarity measure.
+\code{ggObsAsyPD}: the \code{ggplot} extension for \code{\link{ObsAsyPD}} object to plot order q against to phylogenetic diversity decomposition and dissimilarity measure.
 }
 \examples{
 

@@ -10,15 +10,15 @@ gghierPD(output, type = "A")
 \item{output}{the output from hierPD.}
 
 \item{type}{selection of plot type : \cr
-\code{(type = "A")} diversity(alpha, gamma);  \cr
-\code{(type = "B")} beta diversity;  \cr
-\code{(type = "D")} dissimilarity measure based on multiplicative decomposition.}
+\code{(type = "A")} for alpha and gamma diversity; \cr
+\code{(type = "B")} for beta diversity; \cr
+\code{(type = "D")} for dissimilarity measure based on multiplicative decomposition.}
 }
 \value{
 a figure for hierarchical phylogenetic diversity decomposition or dissimilarity measure.
 }
 \description{
-\code{gghierPD}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{hierPD}} object to plot order q against to hierarchical phylogenetic diversity decomposition and dissimilarity measure.
+\code{gghierPD}: the \code{ggplot} extension for \code{\link{hierPD}} object to plot order q against to hierarchical phylogenetic diversity decomposition and dissimilarity measure.
 }
 \examples{
 

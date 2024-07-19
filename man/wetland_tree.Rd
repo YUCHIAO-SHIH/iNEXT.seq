@@ -5,7 +5,8 @@
 phylogenetic tree for \code{wetland}
 }
 \description{
-  This dataset includes a phylogenetic tree spanned by 404 OTU listed in the dataset \code{wetland}.
+  This dataset includes a phylogenetic tree spanned by 404 OTU listed in the dataset \code{wetland}. \cr
+  Use the \code{chronos} function in the \code{ape} package to convert to an ultrametric tree with a fixed tree height of 1.
 }
 \usage{data(wetland_tree)}
 \format{

@@ -69,12 +69,12 @@ iNEXTseq <- function(data, q=c(0,1,2), base = "coverage", level = NULL, nboot = 
 
 #' ggplot2 extension for an iNEXT.seq object
 #'
-#' \code{ggiNEXTseq}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{iNEXTseq}} object to plot coverage- or sample-sized-based rarefaction/extrapolation curves for phylogenetic diversity decomposition and dissimilarity measure.
+#' \code{ggiNEXTseq}: the \code{ggplot} extension for \code{\link{iNEXTseq}} object to plot coverage- or sample-sized-based rarefaction/extrapolation curves for phylogenetic diversity decomposition and dissimilarity measure.
 #'
 #' @param output the output from iNEXTseq.
 #' @param type (required only when \code{base = "coverage"}), selection of plot type : \cr
-#' \code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr
-#' \code{type = 'D'} for plotting 4 turnover dissimilarities.
+#' \code{type = "B"} for plotting the gamma, alpha, and beta diversity;  \cr
+#' \code{type = "D"} for plotting 4 turnover dissimilarities.
 #'
 #' @return a figure for phylogenetic diversity decomposition or dissimilarity measure.
 #'
@@ -142,19 +142,18 @@ ggiNEXTseq <- function(output, type = "B"){
 
 #' function to calculate observed or asymptotic phylogenetic gamma, alpha, beta diversity and dissimilarity of order q
 #' 
-#' \code{ObsAsyPD} computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for phylogenetic gamma, alpha, beta diversity and dissimilarity; these values with different order q can be used to depict a q-profile in the \code{ggObsAsyPD} function.\cr\cr 
-#' For each dimension, by default, both the observed and asymptotic diversity estimates will be computed.
+#' \code{ObsAsyPD} computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for phylogenetic gamma, alpha, beta diversity and dissimilarity; these values with different order q can be used to depict a q-profile in the \code{ggObsAsyPD} function.
 #' 
 #' @param data OTU data can be input as a \code{matrix/data.frame} (species by assemblages), or a \code{list} of \code{matrices/data.frames}, each matrix represents species-by-assemblages abundance matrix.\cr
 #' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.
-#' @param weight (required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.
+#' @param weight (required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weighted \code{("size")}, equal-weighted \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.
 #' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.
-#' @param conf a positive number < 1 specifying the level of confidence interval. Default is 0.95.
+#' @param conf a positive number < 1 specifying the level of confidence interval. Default is \code{0.95}.
 #' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
 #' @param type estimate type: empirical \code{(type = "mle")} or asymptotic estimate \code{(type = "est")}. Default is \code{"mle"}.
 #' @param decomposition decomposition type: relative \code{(decomposition = "relative")} or absolute decomposition \code{(decomposition = "absolute")}. Default is \code{"relative"}.
 #' 
-#' @return a data frames with observed or asymptotic phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
+#' @return a data frames with observed or asymptotic phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure for each dataset.
 #' 
 #' @examples
 #' 
@@ -295,12 +294,12 @@ ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf
 
 #' ggplot2 extension for an ObsAsyPD object
 #'
-#' \code{ggObsAsyPD}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{ObsAsyPD}} object to plot order q against to phylogenetic diversity decomposition and dissimilarity measure.
+#' \code{ggObsAsyPD}: the \code{ggplot} extension for \code{\link{ObsAsyPD}} object to plot order q against to phylogenetic diversity decomposition and dissimilarity measure.
 #'
 #' @param output the output from ObsAsyPD.
 #' @param method selection of plot type : \cr
-#' \code{type = 'B'} for plotting the gamma, alpha, and beta diversity;  \cr
-#' \code{type = 'D'} for plotting 4 turnover dissimilarities.
+#' \code{type = "B"} for plotting the gamma, alpha, and beta diversity;  \cr
+#' \code{type = "D"} for plotting 4 turnover dissimilarities.
 #'
 #' @return a figure for phylogenetic diversity decomposition or dissimilarity measure.
 #'
@@ -363,7 +362,7 @@ ggObsAsyPD <- function(output, type = "B"){
 #' @param data data should be input as a \code{matrix/data.frame} (species by assemblages).
 #' @param mat hierarchical structure of data should be input as a \code{matrix}.
 #' @param q a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.
-#' @param weight (required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.
+#' @param weight (required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weighted \code{("size")}, equal-weighted \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.
 #' @param nboot a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.
 #' @param conf a positive number < 1 specifying the level of confidence interval. Default is \code{0.95}.
 #' @param PDtree a phylogenetic tree in Newick format for all observed species in the pooled assemblage.
@@ -399,13 +398,13 @@ hierPD <- function(data, mat, q = seq(0, 2, 0.2), weight = "size", nboot = 10, c
 
 #' ggplot2 extension for an hierPD object
 #'
-#' \code{gghierPD}: the \code{\link[ggplot2]{ggplot}} extension for \code{\link{hierPD}} object to plot order q against to hierarchical phylogenetic diversity decomposition and dissimilarity measure.
+#' \code{gghierPD}: the \code{ggplot} extension for \code{\link{hierPD}} object to plot order q against to hierarchical phylogenetic diversity decomposition and dissimilarity measure.
 #'
 #' @param output the output from hierPD.
 #' @param type selection of plot type : \cr
-#' \code{(type = "A")} diversity(alpha, gamma);  \cr
-#' \code{(type = "B")} beta diversity;  \cr
-#' \code{(type = "D")} dissimilarity measure based on multiplicative decomposition.
+#' \code{(type = "A")} for alpha and gamma diversity; \cr
+#' \code{(type = "B")} for beta diversity; \cr
+#' \code{(type = "D")} for dissimilarity measure based on multiplicative decomposition.
 #'
 #' @return a figure for hierarchical phylogenetic diversity decomposition or dissimilarity measure.
 #'
@@ -424,7 +423,36 @@ gghierPD <- function(output, type = "A"){
              ifelse(type=="B", 5,
                     ifelse(type=="D", 6, NA)))
   
-  gghier_phylogeny(output, method = m) + xlab("Order q") + ylab("Estimate") +
+  if (m == 6) {
+    output = output[grep("1-", output$Method), ]
+    if (unique(hier_output$Decomposition) == "relative") {
+      output$group = "1-CqN*"
+      output$group[grep("1-UqN*", output$Method)] = "1-UqN*"
+      output$group[grep("1-SqN*", output$Method)] = "1-SqN*"
+      output$group[grep("1-VqN*", output$Method)] = "1-VqN*"
+    }
+    else if (unique(hier_output$Decomposition) == "absolute") {
+      output$group = "1-CqN"
+      output$group[grep("1-UqN", output$Method)] = "1-UqN"
+      output$group[grep("1-SqN", output$Method)] = "1-SqN"
+      output$group[grep("1-VqN", output$Method)] = "1-VqN"
+    }
+    output$Method = fct_inorder(output$Method)
+    plot_out = ggplot(output, aes(x = Order.q, y = Estimator, 
+                              colour = Method, fill = Method)) + facet_grid(fct_inorder(group) ~ .) + 
+      geom_line(size = 1.5) + 
+      geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Method), linetype = 0, alpha = 0.2) +
+      theme_bw() + 
+      theme(legend.position = "bottom", legend.box = "vertical", legend.key.width = unit(1.2, "cm"), 
+            legend.title = element_blank(), legend.margin = margin(0, 0, 0, 0), 
+            legend.box.margin = margin(-10, -10, -5, -10), text = element_text(size = 16), 
+            plot.margin = unit(c(5.5, 5.5, 5.5, 5.5), "pt")) +
+      guides(linetype = guide_legend(keywidth = 2.5))
+  }
+  else {
+    plot_out = gghier_phylogeny(output, method = m)
+  }
+  plot_out + xlab("Order q") + ylab("Estimate") +
     theme(strip.text = element_text(size = 15, face = "bold"), 
           axis.title = element_text(hjust = 0.5, size = 15, face = "bold"), 
           axis.text.x = element_text(size = 12), 

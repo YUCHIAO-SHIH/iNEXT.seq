@@ -5,7 +5,8 @@
 phylogenetic tree for \code{esophagus}
 }
 \description{
-  This dataset includes a phylogenetic tree spanned by 58 OTU listed in the dataset \code{esophagus}.
+  This dataset includes a phylogenetic tree spanned by 58 OTU listed in the dataset \code{esophagus}. \cr
+  Use the \code{chronos} function in the \code{ape} package to convert to an ultrametric tree with a fixed tree height of 1.
 }
 \usage{data(esophagus_tree)}
 \format{

@@ -23,7 +23,7 @@ hierPD(
 
 \item{q}{a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.}
 
-\item{weight}{(required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.}
+\item{weight}{(required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weighted \code{("size")}, equal-weighted \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.}
 
 \item{nboot}{a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.}
 

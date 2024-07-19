@@ -20,11 +20,11 @@ ObsAsyPD(
 
 \item{q}{a numerical vector specifying the diversity orders. Default is \code{seq(0, 2, 0.2)}.}
 
-\item{weight}{(required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weight \code{("size")}, equal-weight \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.}
+\item{weight}{(required only when \code{type = "mle"} and \code{decomposition = "relative"}) weight for relative decomposition empirical estimate. Select size-weighted \code{("size")}, equal-weighted \code{("equal")} or a numerical vector for weight. Default is \code{"size"}.}
 
 \item{nboot}{a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter \code{0} to skip the bootstrap procedures. Default is \code{10}.}
 
-\item{conf}{a positive number < 1 specifying the level of confidence interval. Default is 0.95.}
+\item{conf}{a positive number < 1 specifying the level of confidence interval. Default is \code{0.95}.}
 
 \item{PDtree}{a phylogenetic tree in Newick format for all observed species in the pooled assemblage.}
 
@@ -33,11 +33,10 @@ ObsAsyPD(
 \item{decomposition}{decomposition type: relative \code{(decomposition = "relative")} or absolute decomposition \code{(decomposition = "absolute")}. Default is \code{"relative"}.}
 }
 \value{
-a data frames with observed or asymptotic phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
+a data frames with observed or asymptotic phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure for each dataset.
 }
 \description{
-\code{ObsAsyPD} computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for phylogenetic gamma, alpha, beta diversity and dissimilarity; these values with different order q can be used to depict a q-profile in the \code{ggObsAsyPD} function.\cr\cr 
-For each dimension, by default, both the observed and asymptotic diversity estimates will be computed.
+\code{ObsAsyPD} computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for phylogenetic gamma, alpha, beta diversity and dissimilarity; these values with different order q can be used to depict a q-profile in the \code{ggObsAsyPD} function.
 }
 \examples{
 
