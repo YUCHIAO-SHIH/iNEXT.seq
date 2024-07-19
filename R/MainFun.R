@@ -425,13 +425,13 @@ gghierPD <- function(output, type = "A"){
   
   if (m == 6) {
     output = output[grep("1-", output$Method), ]
-    if (unique(hier_output$Decomposition) == "relative") {
+    if (unique(output$Decomposition) == "relative") {
       output$group = "1-CqN*"
       output$group[grep("1-UqN*", output$Method)] = "1-UqN*"
       output$group[grep("1-SqN*", output$Method)] = "1-SqN*"
       output$group[grep("1-VqN*", output$Method)] = "1-VqN*"
     }
-    else if (unique(hier_output$Decomposition) == "absolute") {
+    else if (unique(output$Decomposition) == "absolute") {
       output$group = "1-CqN"
       output$group[grep("1-UqN", output$Method)] = "1-UqN"
       output$group[grep("1-SqN", output$Method)] = "1-SqN"
