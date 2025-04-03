@@ -43,9 +43,9 @@ a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) 
 }
 \examples{
 
-data("wetland")
-data("wetland_mat")
-data("wetland_tree")
-hier_output <- hierPD(wetland, mat = wetland_mat, q = seq(0, 2, 0.2), PDtree = wetland_tree)
+data("global")
+data("global_tree")
+data("global_mat")
+hier_output <- hierPD(global, mat = global_mat, q = seq(0, 2, 0.2), PDtree = global_tree)
 
 }

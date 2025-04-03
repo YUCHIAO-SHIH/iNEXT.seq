@@ -21,9 +21,9 @@ a figure for phylogenetic diversity decomposition or dissimilarity measure.
 }
 \examples{
 
-data("esophagus")
-data("esophagus_tree")
-output <- iNEXTseq(esophagus[1], q = c(0,1,2), nboot = 10, PDtree = esophagus_tree)
+data("fungi")
+data("fungi_tree")
+output <- iNEXTseq(fungi[1], q = c(0,1,2), nboot = 10, PDtree = fungi_tree)
 ggiNEXTseq(output, type = "B")
 
 }

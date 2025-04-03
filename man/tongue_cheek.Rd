@@ -2,24 +2,24 @@
 \alias{tongue_cheek}
 \docType{data}
 \title{
-tongue and cheek OTU count data
+Tongue and Cheek OTU Count Data
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
+A dataset containing OTU (Operational Taxonomic Unit) abundances from human cheek and tongue samples.
 }
 \usage{data("tongue_cheek")}
 \format{
   A data frame with 2549 observations on the following 2 variables.
   \describe{
-    \item{\code{Cheek}}{a numeric vector}
-    \item{\code{Tongue}}{a numeric vector}
+    \item{\code{Cheek}}{a numeric vector representing OTU abundances from cheek samples.}
+    \item{\code{Tongue}}{a numeric vector representing OTU abundances from tongue samples.}
   }
 }
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
+This dataset can be used to explore phylogenetic diversity and dissimilarity between oral microbial communities sampled from the cheek and the tongue.
 }
 \source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
+Simulated dataset for demonstration purposes.
 }
 \examples{
 data(tongue_cheek)

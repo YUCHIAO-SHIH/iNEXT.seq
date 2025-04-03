@@ -22,10 +22,10 @@ a figure for hierarchical phylogenetic diversity decomposition or dissimilarity 
 }
 \examples{
 
-data("wetland")
-data("wetland_mat")
-data("wetland_tree")
-hier_output <- hierPD(wetland, mat = wetland_mat, q = seq(0, 2, 0.2), PDtree = wetland_tree)
+data("global")
+data("global_mat")
+data("global_tree")
+hier_output <- hierPD(global, mat = global_mat, q = seq(0, 2, 0.2), PDtree = global_tree)
 gghierPD(hier_output, type = "A")
 
 }

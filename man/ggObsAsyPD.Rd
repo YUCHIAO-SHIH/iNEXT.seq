@@ -7,23 +7,22 @@
 ggObsAsyPD(output, type = "B")
 }
 \arguments{
-\item{output}{the output from ObsAsyPD.}
+\item{output}{The output from \code{\link{ObsAsyPD}}.}
 
-\item{method}{selection of plot type : \cr
-\code{type = "B"} for plotting the gamma, alpha, and beta diversity;  \cr
-\code{type = "D"} for plotting 4 turnover dissimilarities.}
+\item{type}{Selection of plot type: \cr
+\code{"B"} for plotting gamma, alpha, and beta diversity; \cr
+\code{"D"} for plotting four turnover dissimilarities.}
 }
 \value{
-a figure for phylogenetic diversity decomposition or dissimilarity measure.
+A ggplot object showing phylogenetic diversity or dissimilarity.
 }
 \description{
-\code{ggObsAsyPD}: the \code{ggplot} extension for \code{\link{ObsAsyPD}} object to plot order q against to phylogenetic diversity decomposition and dissimilarity measure.
+\code{ggObsAsyPD}: the \code{ggplot} extension for \code{\link{ObsAsyPD}} object to plot order q against phylogenetic diversity decomposition or dissimilarity measure.
 }
 \examples{
-
-data("esophagus")
-data("esophagus_tree")
-ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), PDtree = esophagus_tree)
+data("fungi")
+data("fungi_tree")
+ObsAsyPD_output <- ObsAsyPD(fungi[1], q = seq(0, 2, 0.2), PDtree = fungi_tree)
 ggObsAsyPD(ObsAsyPD_output, type = "B")
 
 }

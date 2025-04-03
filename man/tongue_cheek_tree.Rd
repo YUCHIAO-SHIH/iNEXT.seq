@@ -5,7 +5,7 @@
 phylogenetic for tongue and cheek data
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
+A phylogenetic tree associated with the OTU data from human tongue and cheek microbial samples.
 }
 \usage{data("tongue_cheek_tree")}
 \format{
@@ -19,7 +19,7 @@ List of 4 \cr
  - attr(*, "order")= chr "cladewise" \cr
 }
 \source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
+Simulated or preprocessed dataset for demonstration of phylogenetic diversity analysis.
 }
 \examples{
 data(tongue_cheek_tree)

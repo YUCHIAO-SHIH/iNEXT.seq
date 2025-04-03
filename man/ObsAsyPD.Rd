@@ -40,8 +40,8 @@ a data frames with observed or asymptotic phylogenetic diversity (gamma, alpha, 
 }
 \examples{
 
-data("esophagus")
-data("esophagus_tree")
-ObsAsyPD_output <- ObsAsyPD(esophagus[1], q = seq(0, 2, 0.2), PDtree = esophagus_tree)
+data("fungi")
+data("fungi_tree")
+ObsAsyPD_output <- ObsAsyPD(fungi[1], q = seq(0, 2, 0.2), PDtree = fungi_tree)
 
 }
