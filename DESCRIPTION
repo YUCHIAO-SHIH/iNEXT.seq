@@ -15,6 +15,7 @@ Imports:
     abind,
     ape,
     ade4,
+    tidyverse,
     phytools,
     phyclust,
     tidytree,
@@ -28,7 +29,7 @@ Imports:
     tibble
 Remotes: AnneChao/iNEXT.beta3D
 Encoding: UTF-8
-LazyData: yes
+LazyData: true
 License: GPL-3
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr

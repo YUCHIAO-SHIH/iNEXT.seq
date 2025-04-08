@@ -16,18 +16,58 @@ library(iNEXT.seq)
 
 `iNEXT.seq` (iNterpolation and EXTrapolation for UniFrac distance) is an R package. In this document, we provide a quick introduction demonstrating how to run `iNEXT.seq`. Detailed information about `iNEXT.seq` functions is provided in the iNEXT.seq manual, also available in [CRAN](https://cran.r-project.org/package=iNEXT.seq). An online version of [iNEXT.seq-online](http://chao.stat.nthu.edu.tw/wordpress/software_download/iNEXT.seq-online/) is also available for users without an R background.
 
-`iNEXT.seq` provides a new way to measure UniFrac distance, by applying dissimilarity measures based on Chiu's et al.'s multiple assemblages decomposition (Chiu, Jost, and Chao (2014)). And we mainly consider three measures of Hill numbers of order q: species richness (`q = 0`), Shannon diversity (`q = 1`, the exponential of Shannon entropy) and Simpson diversity (`q = 2`, the inverse of Simpson concentration).
+`iNEXT.seq` introduces a novel method for measuring UniFrac distance by applying dissimilarity measures based on the multiple-assemblage decomposition approaches of Chiu, Jost, and Chao (2014), as well as Routledge (1979). It primarily considers three measures of Hill numbers: species richness (`q = 0`), Shannon diversity (`q = 1`, the exponential of Shannon entropy), and Simpson diversity (`q = 2`, the inverse of Simpson concentration).
 
-`iNEXT.seq` uses the observed sample of OTU count data (called the "reference sample") 
-to calculate UniFrac distance estimates and the associated confidence intervals for coverage-based rarefaction and extrapolation (R/E) curve.
+Utilizing the observed sample of OTU count data (the “reference sample”), `iNEXT.seq` calculates UniFrac distance estimates and associated confidence intervals for coverage-based rarefaction and extrapolation (R/E) curves. By performing a monotonic transformation on phylogenetic beta diversity for rarefied and extrapolated samples, based on standardized levels of sample completeness (measured by sample coverage), `iNEXT.seq` plots diversity estimates against sample coverage on a coverage-based sampling curve. In addition, `iNEXT.seq` provides asymptotic estimates phylogenetic diversity and dissimilarity for multiple-assemblage and hierarchical decompositions under Chiu’s et al.’s (2014) and Routledge’s (1979) framework, as well as diversity profiles for order q.
 
-`iNEXT.seq` computes dissimilarity as UniFrac distance estimates by doing monotonic transformation on phylogenetic beta diversity for rarefied and extrapolated samples, based on standardized levels of sample completeness (measured by sample coverage). This coverage-based  sampling curve plots the diversity estimates with respect to sample coverage. 
+`iNEXT.seq` features two statistical analyses for multiple assemblages (non-asymptotic and asymptotic), and asymptotic statistical analysis for hierarchical structure data:
+
+
+(1) A non-asymptotic approach based on interpolation and extrapolation for multiple-assemblage phylogenetic diversity
+
+For abundance data, two types of R/E (rarefaction/extrapolation) sampling curves are available:
+
+Two types of R/E sampling curves:
+
+- **Sample-size-based (or size-based) R/E curves**: This type of sampling curve plots standardized phylogenetic gamma and alpha diversity with respect to sample size.
+- **Coverage‐based R/E sampling curves**: This type of sampling curve plots standardized phylogenetic gamma, alpha, and beta diversity as well as four classes of dissimilarity measures with respect to sample coverage (an objective measure of sample completeness).
+
+Both curve types support two decomposition approaches:
+
+Relative: Based on Routledge’s (1979) method, which compares node relative abundances using size-weighted assemblages.
+
+Absolute: Based on Chiu et al.’s (2014) method, which compares node raw abundances without applying assemblage size weights.
+
+
+For incidence data, based on the framework of Chiu et al. (2015), iNEXT.seq also provides rarefaction and extrapolation of phylogenetic diversity via two types of sampling curves:
+
+
+- **Sample-size-based (or size-based) R/E curves**: This type of sampling curve plots standardized phylogenetic gamma and alpha diversity with respect to sample size.
+- **Coverage‐based R/E sampling curves**: This type of sampling curve plots standardized phylogenetic gamma, alpha, and beta diversity as well as four classes of dissimilarity measures with respect to sample coverage (an objective measure of sample completeness).
+
+
+(2) An asymptotic approach to infer asymptotic phylogenetic diversity for multiple-assemblage data
+
+iNEXT.seq computes the estimated asymptotic phylogenetic gamma, alpha, and beta diversity as well as four classes of dissimilarity measures and also plots profiles (q-profiles) for order q between 0 and 2 (by default), in comparison with the observed diversity and dissimilarity measures. Additionally, two types of beta diversity decomposition calculations are provided:
+
+- **Relative**: Routledge’s (1979) approach for comparing node relative abundances for size-weighted assemblages.
+- **Absolute**: Chiu et al.’s (2014) approach for comparing node raw abundances.
+
+(3) An asymptotic approach to infer asymptotic phylogenetic diversity for hierarchical structure data
+
+Based on above asymptotic approach for multiple assemblages, we introduce a hierarchical structural estimation, calculate the hierarchical phylogenetic diversity and dissimilarity measures, and also plots profiles (q-profiles) for order q.
+
+Note that sufficient data are needed to run iNEXT.seq. If your data comprises only a few species and their phylogenies, it is probable that the data lack sufficient information to run iNEXT.seq.
+
 
 
 ## HOW TO CITE iNEXT.seq
 If you publish your work based on the results from the `iNEXT.seq` package, you should make references to the following methodology paper:
 
-- 
+- Routledge, R. (1979). Diversity indices: which ones are admissible? *Journal of Theoretical Biology*, 76(4), 503-515.
+- Chiu, C.-H., Jost, L. and Chao\*, A. (2014). Phylogenetic beta diversity, similarity, and differentiation measures based on Hill numbers. *Ecological Monographs*, 84, 21-44.
+- Chao, A., Chiu, C.-H., Hsieh, T. C., Davis, T., Nipperess, D., and Faith, D. (2015) Rarefaction and extrapolation of phylogenetic diversity.*Methods in Ecology and Evolution*, 6, 380-388.
+
 
 ## SOFTWARE NEEDED TO RUN iNEXT.seq IN R
 - Required: [R](https://cran.r-project.org/)
@@ -44,17 +84,34 @@ install.packages("iNEXT.seq")
 ## install the latest version from github
 install.packages('devtools')
 library(devtools)
-install_github('yayunteng/iNEXT.seq')
+install_github('YUCHIAO-SHIH/iNEXT.seq')
 ## import packages
 library(iNEXT.seq)
 ```
 
+Here are eight main functions we provide in this package : 
 
-Here are two main functions we provide in this package : 
+four functions for non-asymptotic analysis for multiple-assemblage phylogenetic diversity with graphical displays:
 
-- **iNEXTseq** : Computing dissimilarity estimates as UniFrac distances at specified sample coverage.
-
+- **iNEXTseq** : Computes standardized phylogenetic diversity estimates of order q = 0, 1 and 2 for rarefied and
+extrapolated samples at specified sample coverage values and sample sizes.
 - **ggiNEXTseq** : Visualizing the output from the function `iNEXTseq`
+
+- **iNEXT_seq_Relative** : Computes standardized phylogenetic diversity estimates of order q = 0, 1 and 2 for rarefied and
+extrapolated samples at specified sample coverage values and sample sizes.
+- **ggiNEXT_seq_Relative** : Visualizing the output from the function `iNEXTseq`
+
+
+Two functions for asymptotic analysis for multiple-assemblage phylogenetic diversity with graphical displays:
+
+- **ObsAsyPD** : Computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for multiple-assemblage phylogenetic diversity.
+- **ggObsAsyPD** : Visualizing the output from the function `ObsAsyPD`
+
+Two functions for asymptotic analysis for hierarchical phylogenetic diversity with graphical displays:
+
+- **hierPD** : Computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for hierarchical phylogenetic diversity.
+- **gghierPD** : Visualizing the output from the function `hierPD`
+
 
 
 ## MAIN FUNCTION: iNEXTseq()
@@ -62,12 +119,14 @@ Here are two main functions we provide in this package :
 We first describe the main function `iNEXTseq()` with default arguments: 
 
 ```{r eval=FALSE}
-iNEXTseq(data, q = c(0, 1, 2), level = NULL, nboot = 10, conf = 0.95,
-             PDtree = NULL, PDreftime = NULL)
+iNEXTseq(data, q=c(0,1,2), base = "coverage", datatype = "abundance",level = NULL, nboot = 10, conf = 0.95, PDtree = NULL, PDreftime = NULL, PDtype = 'meanPD')
 ```
 
 
-The arguments of this function are briefly described below, and will be explained in more details by illustrative examples in later text. This main function computes UniFrac distance estimates of order q at specified sample coverage. By default of <code>level = NULL</code>, then this function computes estimates up to one (for q = 1, 2) or up to the coverage of double the reference sample size (for q = 0).
+The arguments of this function are briefly described below and will be further explained through illustrative examples in the following text. This main function computes gamma, alpha, and beta diversity estimates of order q at specified sample coverage or sample size, based on the multiple-assemblage diversity decomposition proposed by Chiu et al. (2014).
+
+By default, if <code>base = "size"</code> and <code>level = NULL</code>, the function computes gamma and alpha diversity estimates up to twice the reference sample size in each region.
+If <code>base = "coverage"</code> and <code>level = NULL</code>, the function computes gamma, alpha, beta diversity, and four dissimilarity/turnover indices up to coverage = 1 (for <code>q = 1, 2</code>) or up to the coverage corresponding to double the reference sample size (for <code>q = 0</code>).
 
 
 <table style="width:100%;">
@@ -93,88 +152,130 @@ OTU count data can be input as a <code>matrix/data.frame</code> (species by asse
 <td align="center"><code>q</code></td>
 <td align="left">a numerical vector specifying the diversity orders. Default is <code>c(0, 1, 2)</code>.</td>
 
+<tr class="odd">
+  <td align="center"><code>datatype</code></td>
+  <td align="left">
+    a character string specifying the data type: <code>"abundance"</code> (individual-based OTU count data) or <code>"incidence_raw"</code> (sampling-unit-based incidence data). <br>
+    For <code>"abundance"</code>, input should be a <code>matrix/data.frame</code> or a list of such matrices (species-by-assemblages). <br>
+    For <code>"incidence_raw"</code>, input should be a list of lists, where each element represents a dataset, and each dataset contains a list of species-by-sampling-unit incidence matrices (one per assemblage).
+  </td>
+</tr>
+
 </tr>
 <tr class="odd">
-<td align="center"><code>level</code></td>
-<td align="left">A numerical vector specifying the particular value of sample coverage (between 0 and 1 when <code>base = "coverage"</code>). <code>level = 1</code> (<code>base = "coverage"</code>) means complete coverage  \cr
-(the corresponding diversity represents asymptotic diversity). \cr
-If <code>level = NULL</code>, then this function computes UniFrac distance estimates up to one (for <code>q = 1, 2</code>) or up to the coverage of double the reference sample size (for <code>q = 0</code>).</td>
+<td align="center"><code>base</code></td>
+<td align="left">Sample-sized-based rarefaction and extrapolation for gamma and alpha diversity (<code>base = "size"</code>) or coverage-based rarefaction and extrapolation for gamma, alpha and beta diversity (<code>base = "coverage"</code>). Default is <code>base = "coverage"</code>.</td>
+
 
 </tr>
 <tr class="even">
+<td align="center"><code>level</code></td>
+<td align="left">A numerical vector specifying the particular value of sample coverage (between 0 and 1 when <code>base = "coverage"</code>) or sample size (<code>base = "size"</code>). <code>level = 1</code> (<code>base = "coverage"</code>) means complete coverage \cr
+(the corresponding diversity represents asymptotic diversity). \cr
+
+If <code>base = "size"</code> and <code>level = NULL</code>, then this function computes the gamma and alpha diversity estimates up to double the reference sample size. \cr
+
+If <code>base = "coverage"</code> and <code>level = NULL</code>, then this function computes the gamma and alpha diversity estimates up to one (for <code>q = 1, 2</code>) or up to the coverage of double the reference sample size (for <code>q = 0</code>); the corresponding beta diversity and dissimilarity are computed up to the same maximum coverage as the alpha diversity.</td>
+
+
+</tr>
+<tr class="odd">
 <td align="center"><code>nboot</code></td>
 <td align="left">a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter <code>0</code> to skip the bootstrap procedures. Default is <code>10</code>. Note that large bootstrap replication needs more run time.</td>
 
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="center"><code>conf</code></td>
 <td align="left">a positive number < 1 specifying the level of confidence interval. Default is <code>0.95</code>.</td>
 
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="center"><code>PDtree</code></td>
 <td align="left">a <code>phylo</code>, a phylogenetic tree in Newick format for all observed species in the pooled assemblage.</td>
 
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="center"><code>PDreftime</code></td>
 <td align="left"> a numerical value specifying reference time for PD. Default is <code>NULL</code> (i.e., the age of the root of PDtree).</td>
 
+
+<tr class="odd">
+  <td align="center"><code>PDtype</code></td>
+  <td align="left">
+    Type of phylogenetic diversity (PD) to report: <code>"meanPD"</code> (default), which reports the mean diversity per unit of reference time, or <code>"PD"</code>, which reports total phylogenetic diversity accumulated up to the specified reference time.
+  </td>
+</tr>
+
+
 </tbody>
 </table>
+
 
 
 This function returns an `"iNEXTseq"` object which can be further used to make plots 
 using the function `ggiNEXTseq()` to be described below. 
 
 ## DATA FORMAT/INFORMATION
-Data should be provided as Individual-based abundance data.
+Input data for each data set with several assemblages/sites include samples species abundances in an empirical sample of n individuals (“reference sample"). When there are N assemblages in a data set, input data consist of a list with an S by N abundance matrix; For M data sets consisting N assemblages, input data should be M lists of S by N abundance matrix.
 
-Input data for each region with several assemblages/sites include samples species abundances in an empirical sample of n individuals (“reference sample"). When there are N assemblages in a region, input data consist of a list with an S by N abundance matrix; For M regions consisting N assemblages, input data should be M lists of S by N abundance matrix.
+A data set (a small example dataset from a human esophageal community) is included in `iNEXT.seq` package for illustration. The data consist a list with four species-by-assemblage data.frames ("T03T04", "T09T10"). For the data, the following commands display how to compute estimate at specified sample coverage.
 
-A data set (a microbiome sample take from tongue dorsum and buccal mucosa) is included in `iNEXT.seq` package for illustration. The data consist a species-by-assemblages matrix with two assemblages (tongue and cheek).For the data, the following commands display how to compute UniFrac distance estimate at specified sample coverage.
-
-Run the following code to view `tongue_cheek` OTU count data: (Here we only show the first ten rows for the matrix)
+Run the following code to view first list of `fungi` OTU count data: (Here we only show the first ten rows for the matrix)
 
 ```{r eval=FALSE}
-data("tongue_cheek")
-tongue_cheek
+data("fungi")
+fungi[1]
 ```
 
 ```{r echo=FALSE}
-data("tongue_cheek")
-head(tongue_cheek, 10)
+data("fungi")
+lapply(fungi[1], function(x) head(x, 10))
 ```
 
-The `iNEXTseq()` function returns the `"iNEXTseq"` object including two data frames for each regions: 
+This function returns an `"iNEXTseq"` object which can be further used to make plots 
+using the function `ggiNEXTseq()` to be described below. 
 
-- C (for UniFrac distance measured by Sorensen-type dissimilarity)
-- U (for UniFrac distance measured by Jaccard-type dissimilarity)
+
+When `base = 'coverage'`, the `iNEXTseq()` function returns the `"iNEXTseq"` object including seven data frames for each data sets: 
+
+- gamma 
+- alpha 
+- beta
+- 1-C (Sorensen-type non-overlap )
+- 1-U (Jaccard-type  non-overlap )
+- 1-V (Sorensen-type turnover )
+- 1-S (Jaccard-type  turnover )
+
+When `base = 'size'`, the `iNEXTseq()` function returns the `"iNEXTseq"` object including two data frames for each data sets: 
+
+- gamma 
+- alpha 
 
 ## Rarefaction/Extrapolation Via Examples
 
-Run the `iNEXTseq()` function with `tongue_cheek` data to compute UniFrac 
-distance standardized by sample coverage. (Here we only show the first six rows for each output data frame)
+Run the `iNEXTseq()` function with `fungi` data to compute multiple-assemblage phylogenetic diversity standardized by sample coverage. (Here we only show the first six rows for each output data frame)
 
-```{r eval=FALSE}
-data("tongue_cheek")
-data("tongue_cheek_tree")
 
-out = iNEXTseq(data = tongue_cheek, q = c(0, 1, 2), nboot = 10, 
-                            PDtree = tongue_cheek_tree, PDreftime = NULL)
+```{r message=FALSE}
+data("fungi")
+data("fungi_tree")
+
+out = iNEXTseq(data = fungi[1], q = c(0, 1, 2), nboot = 10, datatype ="abundance",
+               PDtree = fungi_tree, PDreftime = NULL)
 ```
 
 ```{r echo=FALSE}
-out = iNEXTseq(data = tongue_cheek, q = c(0, 1, 2), nboot = 10, 
-                            PDtree = tongue_cheek_tree, PDreftime = NULL)
-lapply(out$Region_1, function(x) {
+out = iNEXTseq(data = fungi[1], q = c(0, 1, 2), nboot = 10, 
+               datatype ="abundance",
+               PDtree = fungi_tree, PDreftime = NULL)
+lapply(out$T03T04, function(x) {
     tmp = x[1:6,]
-    tmp[,c('Estimate', 'Size', 's.e.', 'LCL', 'UCL')] = round(tmp[,c('Estimate', 'Size', 's.e.', 'LCL', 'UCL')], 3)
+    tmp[,c(4, 5, 7, 8, 9)] = round(tmp[,c(4, 5, 7, 8, 9)], 3)
     tmp
 })
 ```
 
-The output contains two data frames: `C` for Sorensen-type, `U` for Jaccard-type. For each data frame, it includes the UniFrac distance estimate (`Estimate`), the diversity order (`Order.q`), `Method` (Interpolated, Observed, or Extrapolated, depending on whether the size `m` is less than, equal to, or greater than the reference sample size), the sample coverage estimate (`SC`), the sample size (`Size`), the standard error from bootstrap replications (`s.e.`), the 95% lower and upper confidence limits of diversity (`LCL`, `UCL`), and the name of region (`Region`). These UniFrac distance estimates with confidence intervals are used for plotting the R/E curve.
+The output contains seven data frames: `gamma`, `alpha`, `beta`, `1-C`, `1-U`, `1-V`, `1-S`. For each data frame, it includes the diversity estimate (`Gamma`, `Alpha`, `Beta`, `Dissimilarity`), the diversity order (`Order.q`), `Method` (Interpolated, Observed, or Extrapolated, depending on whether the size `Size` is less than, equal to, or greater than the reference sample size), the sample coverage estimate (`SC`), the sample size (`Size`), the standard error from bootstrap replications (`s.e.`), the 95% lower and upper confidence limits of diversity (`LCL`, `UCL`), and the name of data set (`Dataset`). These diversity estimates with confidence intervals are used for plotting the diversity curve.
 
 
 ## GRAPHIC DISPLAYS: FUNCTION ggiNEXTseq()
@@ -182,7 +283,7 @@ The output contains two data frames: `C` for Sorensen-type, `U` for Jaccard-type
 The function `ggiNEXTseq()`, which extends `ggplot2` to the `"iNEXTseq"` object with default arguments, is described as follows: 
 
 ```{r eval=FALSE}
-ggiNEXTseq(output, scale = "fixed", transp = 0.4)  
+ggiNEXTseq(output, type = "B")  
 ```
 
 <table style="width:100%;">
@@ -203,14 +304,8 @@ ggiNEXTseq(output, scale = "fixed", transp = 0.4)
 
 </tr>
 <tr class="even">
-<td align="center"><code>scale</code></td>
-<td align="left">Are scales shared across all facets (the default, <code>"fixed"</code>), or do they vary across rows (<code>"free_x"</code>), columns (<code>"free_y"</code>), or both rows and columns (<code>"free"</code>)?</td>
-
-</tr>
-<tr class="odd">
-<td align="center"><code>transp</code></td>
-<td align="left">a value between 0 and 1 controlling transparency. <code>transp = 0</code> is completely transparent, default is <code>0.4</code>.</td>
-
+<td align="center"><code>type</code></td>
+<td align="left">(required only when base = "coverage"), selection of plot type: <code>type = "B"</code> for plotting the gamma, alpha, and beta diversity; <code>type = "D"</code> for plotting 4 turnover dissimilarities.</td>
 
 </tbody>
 </table>
@@ -218,16 +313,586 @@ ggiNEXTseq(output, scale = "fixed", transp = 0.4)
 
 The `ggiNEXTseq()` function is a wrapper around the `ggplot2` package to create a R/E curve using a single line of code. The resulting object is of class `"ggplot"`, so it can be manipulated using the `ggplot2` tools.
 
-```{r eval=FALSE}
-out = iNEXTseq(data = tongue_cheek, q = c(0, 1, 2), nboot = 10, 
-                   PDtree = tongue_cheek_tree, PDreftime = NULL)
-ggiNEXTseq(out)
+```{r message=FALSE}
+out = iNEXTseq(data = fungi[1], q = c(0, 1, 2), nboot = 10, 
+               datatype ="abundance",
+               PDtree = fungi_tree, PDreftime = NULL)
+ggiNEXTseq(out, type = "B")
 ```
 
 ```{r, fig.align='center', fig.height=6, fig.width=6}
-ggiNEXTseq(out)
+ggiNEXTseq(out, type = "B")
 ```
 
+```{r, fig.align='center', fig.height=6, fig.width=6}
+ggiNEXTseq(out, type = "D")
+```
+
+
+
+The following commands return the size-based R/E sampling curves for gamma and alpha diversity:
+
+```{r message=FALSE, fig.align='center', fig.height=5, fig.width=6}
+out_size = iNEXTseq(data = fungi[1], q = c(0, 1, 2), base = "size", datatype = "abundance",
+                    nboot = 10, PDtree = fungi_tree, PDreftime = NULL)
+ggiNEXTseq(out_size)
+```
+
+
+### MAIN FUNCTION: iNEXT_seq_Relative()
+
+We first describe the main function `iNEXT_seq_Relative()` with default arguments: 
+
+```{r eval=FALSE}
+iNEXT_seq_Relative(data, q = c(0, 1, 2),  base = 'coverage', level = NULL, nboot = 10, conf = 0.95,
+                              PDtree = NULL, PDreftime = NULL, PDtype = 'meanPD')
+```
+
+
+The arguments of this function are briefly described below and will be further explained through illustrative examples in the following text. This main function computes gamma, alpha, and beta diversity estimates of order q at specified sample coverage or sample size, based on the multiple-assemblage decomposition framework proposed by Routledge (1979), which incorporates assemblage-size weighting to reflect the relative contribution of each assemblage.
+
+By default, if <code>base = "size"</code> and <code>level = NULL</code>, the function computes gamma and alpha diversity estimates up to twice the reference sample size, accounting for the size-weighted contribution of each assemblage.
+If <code>base = "coverage"</code> and <code>level = NULL</code>, the function computes gamma, alpha, beta diversity, and four dissimilarity/turnover indices up to coverage = 1 (for <code>q = 1, 2</code>) or up to the coverage corresponding to double the reference sample size (for <code>q = 0</code>), with all components estimated under the relative abundance framework.
+
+
+<table style="width:100%;">
+<colgroup>
+<col width="20%">
+<col width="80%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Argument</th>
+<th align="left">Description</th>
+
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><code>data</code></td>
+<td align="left">
+OTU count data can be input as a <code>matrix/data.frame</code> (species by assemblages), or a list of <code>matrices/data.frames</code>, each matrix represents species-by-assemblages abundance matrix.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>q</code></td>
+<td align="left">a numerical vector specifying the diversity orders. Default is <code>c(0, 1, 2)</code>.</td>
+
+
+</tr>
+<tr class="odd">
+<td align="center"><code>base</code></td>
+<td align="left">Sample-sized-based rarefaction and extrapolation for gamma and alpha diversity (<code>base = "size"</code>) or coverage-based rarefaction and extrapolation for gamma, alpha and beta diversity (<code>base = "coverage"</code>). Default is <code>base = "coverage"</code>.</td>
+
+
+</tr>
+<tr class="even">
+<td align="center"><code>level</code></td>
+<td align="left">A numerical vector specifying the particular value of sample coverage (between 0 and 1 when <code>base = "coverage"</code>) or sample size (<code>base = "size"</code>). <code>level = 1</code> (<code>base = "coverage"</code>) means complete coverage \cr
+(the corresponding diversity represents asymptotic diversity). \cr
+
+If <code>base = "size"</code> and <code>level = NULL</code>, then this function computes the gamma and alpha diversity estimates up to double the reference sample size. \cr
+
+If <code>base = "coverage"</code> and <code>level = NULL</code>, then this function computes the gamma and alpha diversity estimates up to one (for <code>q = 1, 2</code>) or up to the coverage of double the reference sample size (for <code>q = 0</code>); the corresponding beta diversity and dissimilarity are computed up to the same maximum coverage as the alpha diversity.</td>
+
+
+</tr>
+<tr class="odd">
+<td align="center"><code>nboot</code></td>
+<td align="left">a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter <code>0</code> to skip the bootstrap procedures. Default is <code>10</code>. Note that large bootstrap replication needs more run time.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>conf</code></td>
+<td align="left">a positive number < 1 specifying the level of confidence interval. Default is <code>0.95</code>.</td>
+
+</tr>
+<tr class="odd">
+<td align="center"><code>PDtree</code></td>
+<td align="left">a <code>phylo</code>, a phylogenetic tree in Newick format for all observed species in the pooled assemblage.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>PDreftime</code></td>
+<td align="left"> a numerical value specifying reference time for PD. Default is <code>NULL</code> (i.e., the age of the root of PDtree).</td>
+
+
+<tr class="odd">
+  <td align="center"><code>PDtype</code></td>
+  <td align="left">
+    Type of phylogenetic diversity (PD) to report: <code>"meanPD"</code> (default), which reports the mean diversity per unit of reference time, or <code>"PD"</code>, which reports total phylogenetic diversity accumulated up to the specified reference time.
+  </td>
+</tr>
+
+
+</tbody>
+</table>
+
+This function returns an `"iNEXT_seq_Relative"` object which can be further used to make plots 
+using the function `ggiNEXT_seq_Relative()` to be described below. 
+
+
+When `base = 'coverage'`, the `iNEXT_seq_Relative()` function returns the `"iNEXT_seq_Relative()"` object including seven data frames for each data sets: 
+
+- gamma 
+- alpha 
+- beta
+- 1-$C^*$ (Sorensen-type non-overlap )
+- 1-$U^*$ (Jaccard-type  non-overlap )
+- 1-$V^*$ (Sorensen-type turnover )
+- 1-$S^*$ (Jaccard-type  turnover )
+
+When `base = 'size'`, the `iNEXTseq()` function returns the `"iNEXTseq"` object including two data frames for each data sets: 
+
+- gamma 
+- alpha 
+- joint
+
+
+#### Rarefaction/Extrapolation Via Examples
+
+Run the `iNEXT_seq_Relative()` function with `fungi` data to compute multiple-assemblage phylogenetic diversity standardized by sample coverage. (Here we only show the first six rows for each output data frame)
+
+```{r message=FALSE}
+data("fungi")
+data("fungi_tree")
+
+out = iNEXT_seq_Relative(data = fungi[1], q = c(0, 1, 2), nboot = 10,
+               PDtree = fungi_tree, PDreftime = NULL)
+```
+
+```{r echo=FALSE}
+out = iNEXT_seq_Relative(data = fungi[1], q = c(0, 1, 2), nboot = 10,
+               PDtree = fungi_tree, PDreftime = NULL)
+lapply(out$T03T04, function(x) {
+    tmp = x[1:6,]
+    tmp[,c(4, 5,6, 7, 9,10,11)] = round(tmp[,c(4, 5,6, 7, 9,10,11)], 3)
+    tmp
+})
+```
+
+The output contains seven data frames: `gamma`, `alpha`, `beta`, `1-$C^*$`, `1-$U^*$`, `1-$V^*$`, `1-$S^*$`. For each data frame, it includes the diversity estimate (`Gamma`, `Alpha`, `Beta`, `Dissimilarity`), the diversity order (`Order.q`), `Method` (Interpolated, Observed, or Extrapolated, depending on whether the size `Size` is less than, equal to, or greater than the reference sample size), the sample coverage estimate (`SC`), the sample size (`Size`), the standard error from bootstrap replications (`s.e.`), the 95% lower and upper confidence limits of diversity (`LCL`, `UCL`),number of , and the name of data set (`Dataset`). These diversity estimates with confidence intervals are used for plotting the diversity curve.
+
+When multiple assemblages are analyzed, the output will also include assemblage-specific sample information:
+
+-If base = "coverage", the sample size of each assemblage will be listed (Assemblage1, Assemblage2, etc.).
+
+-If base = "size", the sample coverage of each assemblage will be listed instead.
+
+### GRAPHIC DISPLAYS: FUNCTION ggiNEXT_seq_Relative()
+
+The function `ggiNEXT_seq_Relative()`, which extends `ggplot2` to the `"iNEXTseq"` object with default arguments, is described as follows: 
+
+```{r eval=FALSE}
+ggiNEXT_seq_Relative(output, type = "B")  
+```
+
+<table style="width:100%;">
+<colgroup>
+<col width="20%">
+<col width="80%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Argument</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><code>output</code></td>
+<td align="left">the output of <code>iNEXTseq</code>.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>type</code></td>
+<td align="left">(required only when base = "coverage"), selection of plot type: <code>type = "B"</code> for plotting the gamma, alpha, and beta diversity; <code>type = "D"</code> for plotting 4 turnover dissimilarities.</td>
+
+</tbody>
+</table>
+
+
+The `ggiNEXTseq()` function is a wrapper around the `ggplot2` package to create a R/E curve using a single line of code. The resulting object is of class `"ggplot"`, so it can be manipulated using the `ggplot2` tools. Users can visualize the output of beta diversity or four dissimilarities by setting the parameter <code>**type**</code>:
+
+```{r eval=FALSE}
+out = iNEXTseq(data = fungi[1], q = c(0, 1, 2), nboot = 10, 
+               datatype ="abundance",
+               PDtree = fungi_tree, PDreftime = NULL)
+ggiNEXT_seq_Relative(out, type = "B")
+```
+
+```{r, fig.align='center', fig.height=6, fig.width=6, echo=FALSE}
+ggiNEXT_seq_Relative(out, type = "B")
+```
+
+```{r, fig.align='center', fig.height=8, fig.width=6}
+ggiNEXT_seq_Relative(out, type = "D")
+```
+
+The following commands return the size-based R/E sampling curves for gamma and alpha diversity:
+
+```{r message=FALSE, fig.align='center', fig.height=5, fig.width=6}
+out_size = iNEXT_seq_Relative(data = fungi[1], q = c(0, 1, 2), base = "size", 
+                    nboot = 10, PDtree = fungi_tree, PDreftime = NULL)
+ggiNEXT_seq_Relative(out_size)
+```
+
+
+
+### MAIN FUNCTION: ObsAsyPD()
+
+We first describe the main function `ObsAsyPD()` with default arguments: 
+
+```{r eval=FALSE}
+ObsAsyPD(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
+         PDtree, type = "mle", decomposition = "relative")
+```
+
+The arguments of this function are briefly described below, and will be explained in more details by illustrative examples in later text. This main function computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for multiple-assemblage phylogenetic diversity; these values with different order q can be used to depict a q-profile in the `ggObsAsyPD` function.
+
+<table style="width:100%;">
+<colgroup>
+<col width="20%">
+<col width="80%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Argument</th>
+<th align="left">Description</th>
+
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><code>data</code></td>
+<td align="left">
+OTU count data can be input as a <code>matrix/data.frame</code> (species by assemblages), or a list of <code>matrices/data.frames</code>, each matrix represents species-by-assemblages abundance matrix.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>q</code></td>
+<td align="left">a numerical vector specifying the diversity orders. Default is <code>seq(0, 2, 0.2)</code>.</td>
+
+
+</tr>
+<tr class="odd">
+<td align="center"><code>weight</code></td>
+<td align="left">(required only when <code>type = "mle"</code> and <code>decomposition = "relative"</code>) weight for relative decomposition empirical estimate. Select size-weighted (<code>"size"</code>), equal-weighted (<code>"equal"</code>) or a numerical vector for weight. Default is <code>"size"</code>.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>nboot</code></td>
+<td align="left">a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter <code>0</code> to skip the bootstrap procedures. Default is <code>10</code>. Note that large bootstrap replication needs more run time.</td>
+
+</tr>
+<tr class="odd">
+<td align="center"><code>conf</code></td>
+<td align="left">a positive number < 1 specifying the level of confidence interval. Default is <code>0.95</code>.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>PDtree</code></td>
+<td align="left">a <code>phylo</code>, a phylogenetic tree in Newick format for all observed species in the pooled assemblage.</td>
+
+</tr>
+<tr class="odd">
+<td align="center"><code>type</code></td>
+<td align="left">estimate type: empirical (<code>type = "mle"</code>) or asymptotic estimate (<code>type = "est"</code>).
+Default is <code>"mle"</code>.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>decomposition</code></td>
+<td align="left">decomposition type: relative (<code>decomposition = "relative"</code>) or absolute decomposition
+(<code>decomposition = "absolute"</code>). Default is <code>"relative"</code>.</td>
+
+</tbody>
+</table>
+
+This function returns an `"ObsAsyPD"` object which can be further used to make plots 
+using the function `ggObsAsyPD()` to be described below. 
+
+
+#### Examples
+
+Run the `ObsAsyPD()` function with `fungi` data to compute empirical estimate for relative decomposition of multiple-assemblage phylogenetic diversity. (Here we only show the first fourteen rows for output data frame)
+
+```{r eval=FALSE}
+data("fungi")
+data("fungi_tree")
+
+ObsAsyPD_out = ObsAsyPD(data = fungi[1], q = seq(0, 2, 0.2), nboot = 10, 
+                        PDtree = fungi_tree)
+```
+
+```{r echo=FALSE}
+ObsAsyPD_out = ObsAsyPD(data = fungi[1], q = seq(0, 2, 0.2), nboot = 10, 
+                        PDtree = fungi_tree)
+lapply(ObsAsyPD_out, function(x) {
+    tmp = x[1:14,]
+    tmp[,c(4, 5, 6, 7)] = round(tmp[,c(4, 5, 6, 7)], 3)
+    tmp
+})
+```
+
+The output contains a data frames, it includes the estimate (`Estimator`) of diversity (`Gamma`, `Alpha` and `Beta`) and four types dissimilarity measure (`1-CqN`, `1-UqN`, `1-VqN`, `1-SqN`), the diversity order (`Order.q`), the standard error from bootstrap replications (`Bootstrap S.E.`), the 95% lower and upper confidence limits of diversity (`LCL`, `UCL`), beta diversity decomposition type (`Decomposition`), and the name of data set (`Dataset`). These diversity estimates with confidence intervals are used for plotting the diversity curve.
+
+### GRAPHIC DISPLAYS: FUNCTION ggObsAsyPD()
+
+The function `ggObsAsyPD()`, which extends `ggplot2` to the `"ObsAsyPD"` object with default arguments, is described as follows: 
+
+```{r eval=FALSE}
+ggObsAsyPD(output, type = "B")  
+```
+
+<table style="width:100%;">
+<colgroup>
+<col width="20%">
+<col width="80%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Argument</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><code>output</code></td>
+<td align="left">the output of <code>ObsAsyPD</code>.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>type</code></td>
+<td align="left">selection of plot type: <code>type = "B"</code> for plotting the gamma, alpha, and beta diversity; <code>type = "D"</code> for plotting 4 turnover dissimilarities.</td>
+
+</tbody>
+</table>
+
+
+The `ggObsAsyPD()` function is a wrapper around the `ggplot2` package to create a q-profile using a single line of code. The resulting object is of class `"ggplot"`, so it can be manipulated using the `ggplot2` tools. Users can visualize the output of beta diversity or four dissimilarities by setting the parameter <code>**type**</code>:
+
+```{r eval=FALSE}
+ObsAsyPD_out = ObsAsyPD(data = fungi[1], q = seq(0, 2, 0.2), nboot = 10, 
+                        PDtree = fungi_tree)
+ggObsAsyPD(ObsAsyPD_out, type = "B")
+```
+
+```{r, fig.align='center', fig.height=6, fig.width=6, echo=FALSE}
+ggObsAsyPD(ObsAsyPD_out, type = "B")
+```
+
+```{r, fig.align='center', fig.height=8, fig.width=6}
+ggObsAsyPD(ObsAsyPD_out, type = "D")
+```
+
+
+## ANALYSIS FOR HIERARCHICAL STRUCTURE DATA
+
+### DATA INPUT FORMAT
+
+#### Individual-based OTU count data
+
+Input data for each data set with several assemblages/sites include samples species abundances in an empirical sample of n individuals (“reference sample"). When there are N assemblages in a data set, input data consist of a list with an S by N abundance matrix.
+
+A data set (a small example dataset from Chinese wetlands community) is included in `iNEXT.seq` package for illustration. The data consist a data.frames of five assemblages/habitats ("TRRsed1", "TRRsed2", "TRRsed3", "NP2" ,"NP3","SLEpi20M" and "LMEpi24M").
+
+Run the following code to `wetland` OTU count data: (Here we only show the first ten rows for the matrix)
+
+```{r eval=FALSE}
+data("global")
+global
+```
+
+```{r echo=FALSE}
+data("global")
+head(global, 10)
+```
+
+#### Phylogenetic tree for phylogenetic diversity
+
+To perform phylogenetic diversity analysis, the phylogenetic tree (in Newick format) spanned by species observed in the pooled data is required. For the data set `wetland`, the phylogenetic tree for all observed species (including species in "TRRsed1", "TRRsed2", "TRRsed3", "NP2" ,"NP3","SLEpi20M" and "LMEpi24M") is stored in the file `wetland_tree`. A partial list of the tip labels and node labels (not required) are shown below.
+
+```{r eval=FALSE}
+data("global_tree")
+global_tree
+```
+
+```{r echo=FALSE}
+data("global_tree")
+global_tree
+```
+
+#### Structure matrix for hierarchical phylogenetic diversity
+
+In addition to OTU count data and phylogenetic tree, a hierarchical structure matrix of data is required. The structure of matrix is m x N (number of hierarchical layers times number of assemblages). The hierarchical structure matrix of data set `global` are shown below.
+
+```{r eval=FALSE}
+data("global_mat")
+global_mat
+```
+
+```{r echo=FALSE}
+data("global_mat")
+global_mat
+```
+
+### MAIN FUNCTION: hierPD()
+
+We first describe the main function `hierPD()` with default arguments: 
+
+```{r eval=FALSE}
+hierPD(data, mat, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
+       PDtree, type = "mle", decomposition = "relative")
+```
+
+The arguments of this function are briefly described below, and will be explained in more details by illustrative examples in later text. This main function computes observed and asymptotic diversity of order q between 0 and 2 (in increments of 0.2) for hierarchical phylogenetic diversity; these values with different order q can be used to depict a q-profile in the `gghierPD` function.
+
+<table style="width:100%;">
+<colgroup>
+<col width="20%">
+<col width="80%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Argument</th>
+<th align="left">Description</th>
+
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><code>data</code></td>
+<td align="left">
+data should be input as a <code>matrix/data.frame</code> (species by assemblages).</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>mat</code></td>
+<td align="left">hierarchical structure of data should be input as a <code>matrix</code>.</td>
+
+</tr>
+<tr class="odd">
+<td align="center"><code>q</code></td>
+<td align="left">a numerical vector specifying the diversity orders. Default is <code>seq(0, 2, 0.2)</code>.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>weight</code></td>
+<td align="left">(required only when <code>type = "mle"</code> and <code>decomposition = "relative"</code>) weight for relative decomposition empirical estimate. Select size-weighted (<code>"size"</code>), equal-weighted (<code>"equal"</code>) or a numerical vector for weight. Default is <code>"size"</code>.</td>
+
+</tr>
+<tr class="odd">
+<td align="center"><code>nboot</code></td>
+<td align="left">a positive integer specifying the number of bootstrap replications when assessing sampling uncertainty and constructing confidence intervals. Bootstrap replications are generally time consuming. Enter <code>0</code> to skip the bootstrap procedures. Default is <code>10</code>. Note that large bootstrap replication needs more run time.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>conf</code></td>
+<td align="left">a positive number < 1 specifying the level of confidence interval. Default is <code>0.95</code>.</td>
+
+</tr>
+<tr class="odd">
+<td align="center"><code>PDtree</code></td>
+<td align="left">a <code>phylo</code>, a phylogenetic tree in Newick format for all observed species in the pooled assemblage.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>type</code></td>
+<td align="left">estimate type: empirical (<code>type = "mle"</code>) or asymptotic estimate (<code>type = "est"</code>).
+Default is <code>"mle"</code>.</td>
+
+</tr>
+<tr class="odd">
+<td align="center"><code>decomposition</code></td>
+<td align="left">decomposition type: relative (<code>decomposition = "relative"</code>) or absolute decomposition
+(<code>decomposition = "absolute"</code>). Default is <code>"relative"</code>.</td>
+
+</tbody>
+</table>
+
+This function returns an `"hierPD"` object which can be further used to make plots 
+using the function `gghierPD()` to be described below. 
+
+
+#### Examples
+
+Run the `hierPD()` function with `global` data to compute empirical estimate for relative decomposition of hierarchical phylogenetic diversity. (Here we only show the first fifteen rows for output data frame)
+
+```{r eval=FALSE}
+data("global")
+data("global_mat")
+data("global_tree")
+
+hierPD_out = hierPD(data = global, mat = global_mat, q = seq(0, 2, 0.2), 
+                    nboot = 10, PDtree = global_tree)
+```
+
+```{r echo=FALSE}
+hierPD_out = hierPD(data = global, mat = global_mat, q = seq(0, 2, 0.2), 
+                    nboot = 10, PDtree = global_tree)
+tmp = hierPD_out[1:15,]
+tmp[,c(3, 4, 5, 6)] = round(tmp[,c(3, 4, 5, 6)], 3)
+tmp
+```
+
+The output contains a data frames, it includes the estimate (`Estimator`) of hierarchical diversity (`qPD_gamma`, `qPD_alpha`, `qPD_Beta` and `qPD_Beta_max`) and four types dissimilarity measure (`1-CqN`, `1-UqN`, `1-VqN`, `1-SqN`), the diversity order (`Order.q`), the standard error from bootstrap replications (`Bootstrap S.E.`), the 95% lower and upper confidence limits of diversity (`LCL`, `UCL`), and beta diversity decomposition type (`Decomposition`). These diversity estimates with confidence intervals are used for plotting the diversity curve.
+
+### GRAPHIC DISPLAYS: FUNCTION gghierPD()
+
+The function `gghierPD()`, which extends `ggplot2` to the `"hierPD"` object with default arguments, is described as follows: 
+
+```{r eval=FALSE}
+gghierPD(output, type = "A")  
+```
+
+<table style="width:100%;">
+<colgroup>
+<col width="20%">
+<col width="80%">
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Argument</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><code>output</code></td>
+<td align="left">the output of <code>hierPD</code>.</td>
+
+</tr>
+<tr class="even">
+<td align="center"><code>type</code></td>
+<td align="left">selection of plot type: (<code>type = "A"</code>) for alpha and gamma diversity; (<code>type = "B"</code>) for beta diversity; (<code>type = "D"</code>) for dissimilarity measure based on multiplicative decomposition.</td>
+
+</tbody>
+</table>
+
+
+The `gghierPD()` function is a wrapper around the `ggplot2` package to create a q-profile using a single line of code. The resulting object is of class `"ggplot"`, so it can be manipulated using the `ggplot2` tools. Users can visualize the output of beta diversity or four dissimilarities by setting the parameter <code>**type**</code>:
+
+```{r eval=FALSE}
+hierPD_out = hierPD(data = wetland, mat = wetland_mat, q = seq(0, 2, 0.2), 
+                    nboot = 10, PDtree = wetland_tree)
+gghierPD(hierPD_out, type = "A")
+```
+
+```{r, fig.align='center', fig.height=4, fig.width=6, echo=FALSE}
+gghierPD(hierPD_out, type = "A")
+```
+
+```{r, fig.align='center', fig.height=4, fig.width=6}
+gghierPD(hierPD_out, type = "B")
+```
+
+```{r, fig.align='center', fig.height=8, fig.width=7}
+gghierPD(hierPD_out, type = "D")
+```
+
+
 ## References
-- Chiu, C.-H., Jost, L. and Chao*, A. (2014). Phylogenetic beta diversity, similarity, and differentiation measures based on Hill numbers. Ecological Monographs 84, 21-44.
+- Chiu, C.-H., Jost, L. and Chao\*, A. (2014). Phylogenetic beta diversity, similarity, and differentiation measures based on Hill numbers. *Ecological Monographs*, 84, 21-44.
+- Routledge, R. (1979). Diversity indices: which ones are admissible? *Journal of Theoretical Biology*, 76(4), 503-515.
 

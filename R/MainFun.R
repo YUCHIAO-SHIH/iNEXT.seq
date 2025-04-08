@@ -17,13 +17,10 @@
 #' @import magrittr
 #' @import ggplot2
 #' @import abind
-#' @import ape
 #' @import phytools
 #' @import phyclust
-#' @import tidytree
 #' @import future.apply
 #' @import ade4
-#' @import tidyr
 #' @import tibble
 #' @import stringr
 #' @import forcats
@@ -387,26 +384,26 @@ ggObsAsyPD <- function(output, type = "B"){
 #' @import magrittr
 #' @import ggplot2
 #' @import abind
-#' @import ape
 #' @import phytools
 #' @import phyclust
-#' @import tidytree
 #' @import future.apply
 #' @import ade4
-#' @import tidyr
 #' @import tibble
 #' @import stringr
 #' @import forcats
-#' @import dplyr
 #' @import RColorBrewer
 #' @import iNEXT.3D
 #' @import iNEXT.beta3D
-#'
+#' @importFrom ape node.depth.edgelength
+#' @importFrom tidytree drop.tip keep.tip
+#' @importFrom dplyr where
+#' @importFrom magrittr extract
 #' @importFrom tidyr gather
 #' @importFrom phyclust get.rooted.tree.height
 #' @importFrom stats rmultinom rbinom qnorm sd optimize
 #' @importFrom grDevices hcl
 #' @importFrom utils combn
+#' @importFrom utils getFromNamespace
 #' @examples
 #' # Abundance data example
 #' data("fungi")
@@ -417,7 +414,11 @@ ggObsAsyPD <- function(output, type = "B"){
 #' @export
 iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = NULL, nboot = 10, conf = 0.95,
                               PDtree = NULL, PDreftime = NULL, PDtype = 'meanPD'){
-
+  
+  PhD.m.est <- .internal_fetch("PhD.m.est", "iNEXT.3D")
+  phyBranchAL_Abu <- .internal_fetch("phyBranchAL_Abu", "iNEXT.3D")
+  bootstrap_population_multiple_assemblage <- .internal_fetch("bootstrap_population_multiple_assemblage", "iNEXT.beta3D")
+  
   if (inherits(data, "data.frame") | inherits(data, "matrix"))
     data = list(Dataset_1 = data)
   if (inherits(data, "list")) {
@@ -458,10 +459,10 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
         data_gamma = data_gamma[data_gamma>0]
         data_alpha = as.matrix(data_list[[i]]) %>% as.vector
 
-        ref_gamma = iNEXT.3D:::Coverage(data_gamma, 'abundance', n)
-        ref_alpha = iNEXT.3D:::Coverage(data_alpha, 'abundance', n)
-        ref_alpha_max = iNEXT.3D:::Coverage(data_alpha, 'abundance', n*2)
-        ref_gamma_max = iNEXT.3D:::Coverage(data_gamma, 'abundance', n*2)
+        ref_gamma = Coverage(data_gamma, 'abundance', n)
+        ref_alpha = Coverage(data_alpha, 'abundance', n)
+        ref_alpha_max = Coverage(data_alpha, 'abundance', n*2)
+        ref_gamma_max = Coverage(data_gamma, 'abundance', n*2)
 
 
         c(level, ref_gamma, ref_alpha, ref_alpha_max, ref_gamma_max) %>% sort %>% unique
@@ -550,23 +551,23 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
     data_alpha = as.matrix(data) %>% as.vector
     wk <- colSums(Routledge_x) / sum(Routledge_x)
 
-    ref_gamma = iNEXT.3D:::Coverage(data_gamma, 'abundance', n)
-    ref_alpha = iNEXT.3D:::Coverage(data_alpha, 'abundance', n)
-    ref_alpha_max = iNEXT.3D:::Coverage(data_alpha, 'abundance', n*2)
-    ref_gamma_max = iNEXT.3D:::Coverage(data_gamma, 'abundance', n*2)
+    ref_gamma = Coverage(data_gamma, 'abundance', n)
+    ref_alpha = Coverage(data_alpha, 'abundance', n)
+    ref_alpha_max = Coverage(data_alpha, 'abundance', n*2)
+    ref_gamma_max = Coverage(data_gamma, 'abundance', n*2)
 
     # level = c(level, ref_gamma, ref_alpha, ref_alpha_max, ref_gamma_max) %>% sort %>% unique
     # level = level[level<1]
 
-    m_gamma = sapply(level, function(i) iNEXT.beta3D:::coverage_to_size(data_gamma, i, datatype='abundance'))
-    m_alpha = sapply(level, function(i) iNEXT.beta3D:::coverage_to_size(data_alpha, i, datatype='abundance'))
+    m_gamma = sapply(level, function(i) coverage_to_size(data_gamma, i, datatype='abundance'))
+    m_alpha = sapply(level, function(i) coverage_to_size(data_alpha, i, datatype='abundance'))
 
     m_Rou_alpha <- lapply(1:ncol(Routledge_x), function(j) {
-      sapply(level, function(i) iNEXT.beta3D:::coverage_to_size(Routledge_x[, j], i, datatype = 'abundance'))
+      sapply(level, function(i) coverage_to_size(Routledge_x[, j], i, datatype = 'abundance'))
     })
 
 
-    aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = data_gamma, rootExtend = T, refT = reft)
+    aL = phyBranchAL_Abu(phylo = PDtree, data = data_gamma, rootExtend = T, refT = reft)
     aL$treeNabu$branch.length = aL$BLbyT[,1]
     aL_table_gamma = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
     #
@@ -575,12 +576,13 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       x_k = Routledge_x[,k]
       names(x_k) = rownames(Routledge_x)
 
-      aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x_k, rootExtend = T, refT = reft)
+      aL = phyBranchAL_Abu(phylo = PDtree, data = x_k, rootExtend = T, refT = reft)
       aL$treeNabu$branch.length = aL$BLbyT[,1]
       aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
     })
-
-    gamma = iNEXT.3D:::PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = m_gamma, q = q, nt = n, reft = reft, cal = "PD") %>% t %>% as.data.frame %>%
+    
+    
+    gamma = PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = m_gamma, q = q, nt = n, reft = reft, cal = "PD") %>% t %>% as.data.frame %>%
       set_colnames(q) %>% gather(Order.q, Estimate) %>%
       mutate(SC = rep(level, length(q)), Size = rep(m_gamma, length(q)))
 
@@ -592,7 +594,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       x = data[data[,i]>0,i]
       names(x) = rownames(data)[data[,i]>0]
 
-      aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
+      aL = phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
       aL$treeNabu$branch.length = aL$BLbyT[,1]
       aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
 
@@ -609,7 +611,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       sapply(1:length(level), function(i) {
         m_i <- m_Rou_alpha[[k]][i]
 
-        iNEXT.3D:::PhD.m.est(ai = ai_k,
+        PhD.m.est(ai = ai_k,
                              Lis = Lis_k,
                              m = m_i,
                              q = q,
@@ -632,7 +634,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           )
       }))
     }))
-    qPDm = iNEXT.3D:::PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = m_alpha, q = q, nt = n, reft = reft, cal = "PD")
+    qPDm = PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = m_alpha, q = q, nt = n, reft = reft, cal = "PD")
     # qPDm = qPDm/N #Routledge joint
 
     # alpha = qPDm %>% t %>% as.data.frame %>%
@@ -749,7 +751,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
         tree_bt = PDtree
 
-        bootstrap_population = iNEXT.beta3D:::bootstrap_population_multiple_assemblage(data, data_gamma, 'abundance')
+        bootstrap_population = bootstrap_population_multiple_assemblage(data, data_gamma, 'abundance')
         p_bt = bootstrap_population
         unseen_p = p_bt[-(1:nrow(data)),] %>% matrix(ncol = ncol(data))
 
@@ -774,7 +776,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
               f1 = sum(x == 1)
               f2 = sum(x == 2)
 
-              aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
+              aL = phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
 
               aL$treeNabu$branch.length = aL$BLbyT[,1]
               aL = aL$treeNabu %>% select(branch.abun,branch.length)
@@ -791,7 +793,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
               if (sum(te[,i]) == 0) return(0) else {
 
-                iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x_bt[1:nrow(data),i], rootExtend = T, refT = reft)$treeNabu %>%
+                phyBranchAL_Abu(phylo = PDtree, data = x_bt[1:nrow(data),i], rootExtend = T, refT = reft)$treeNabu %>%
                   subset(label %in% names(which(te[,i] == TRUE))) %>% select(branch.length) %>% sum
 
               }
@@ -843,18 +845,18 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
         Routledge_x <- x_bt[(rowSums(x_bt) != 0), ]
 
-        m_gamma = sapply(level, function(i) iNEXT.beta3D:::coverage_to_size(bootstrap_data_gamma, i, datatype='abundance'))
-        m_alpha = sapply(level, function(i) iNEXT.beta3D:::coverage_to_size(bootstrap_data_alpha, i, datatype='abundance'))
+        m_gamma = sapply(level, function(i)coverage_to_size(bootstrap_data_gamma, i, datatype='abundance'))
+        m_alpha = sapply(level, function(i) coverage_to_size(bootstrap_data_alpha, i, datatype='abundance'))
 
         m_Rou_alpha <- lapply(1:ncol(Routledge_x), function(j) {
-          sapply(level, function(i) iNEXT.beta3D:::coverage_to_size(Routledge_x[, j], i, datatype = 'abundance'))
+          sapply(level, function(i) coverage_to_size(Routledge_x[, j], i, datatype = 'abundance'))
         })
 
-        aL = iNEXT.3D:::phyBranchAL_Abu(phylo = tree_bt, data = bootstrap_data_gamma, rootExtend = T, refT = reft)
+        aL = phyBranchAL_Abu(phylo = tree_bt, data = bootstrap_data_gamma, rootExtend = T, refT = reft)
         aL$treeNabu$branch.length = aL$BLbyT[,1]
         aL_table_gamma = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
 
-        gamma = as.vector(iNEXT.3D:::PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = m_gamma, q = q, nt = n, reft = reft, cal = "PD") %>% t)
+        gamma = as.vector(PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = m_gamma, q = q, nt = n, reft = reft, cal = "PD") %>% t)
 
         #alpha_R
         aL_table_k = lapply(1:ncol(Routledge_x), function(k){
@@ -862,7 +864,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           x_k = Routledge_x[,k]
           names(x_k) = rownames(Routledge_x)
 
-          aL = iNEXT.3D:::phyBranchAL_Abu(phylo = tree_bt, data = x_k, rootExtend = T, refT = reft)
+          aL = phyBranchAL_Abu(phylo = tree_bt, data = x_k, rootExtend = T, refT = reft)
           aL$treeNabu$branch.length = aL$BLbyT[,1]
           aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
         })
@@ -879,7 +881,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           names(x) = rownames(p_bt)
           x = x[x_bt[,i]>0]
 
-          aL = iNEXT.3D:::phyBranchAL_Abu(phylo = tree_bt, data = x, rootExtend = T, refT = reft)
+          aL = phyBranchAL_Abu(phylo = tree_bt, data = x, rootExtend = T, refT = reft)
           aL$treeNabu$branch.length = aL$BLbyT[,1]
           aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
 
@@ -888,7 +890,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
         }
 
         # alpha = as.vector((iNEXT.3D:::PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = m_alpha, q = q, nt = n, reft = reft, cal = "PD")/N) %>% t)
-        joint = as.vector((iNEXT.3D:::PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = m_alpha, q = q, nt = n, reft = reft, cal = "PD")) %>% t)
+        joint = as.vector((PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = m_alpha, q = q, nt = n, reft = reft, cal = "PD")) %>% t)
 
         # beta_obs = (iNEXT.3D:::PD.Tprofile(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), q = q, nt = n, cal = "PD") /
         #               (iNEXT.3D:::PD.Tprofile(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), q = q, nt = n, cal = "PD") / N)) %>% unlist()
@@ -901,7 +903,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           sapply(1:length(level), function(i) {
             m_i <- m_Rou_alpha[[k]][i]
 
-            iNEXT.3D:::PhD.m.est(ai = ai_k,
+           PhD.m.est(ai = ai_k,
                                  Lis = Lis_k,
                                  m = m_i,
                                  q = q,
@@ -1191,13 +1193,13 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
     ref_gamma = n
     ref_alpha = n
 
-    aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = data_gamma, rootExtend = T, refT = reft)
+    aL = phyBranchAL_Abu(phylo = PDtree, data = data_gamma, rootExtend = T, refT = reft)
     aL$treeNabu$branch.length = aL$BLbyT[,1]
     aL_table_gamma = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
 
-    gamma = iNEXT.3D:::PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD") %>% t %>% as.data.frame %>%
+    gamma = PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD") %>% t %>% as.data.frame %>%
       set_colnames(q) %>% gather(Order.q, Estimate) %>%
-      mutate(Coverage_real = rep(iNEXT.3D:::Coverage(data_gamma, "abundance", level), length(q)), Size = rep(level, length(q)), Size = rep(level, length(q)))
+      mutate(Coverage_real = rep(Coverage(data_gamma, "abundance", level), length(q)), Size = rep(level, length(q)), Size = rep(level, length(q)))
 
 
     aL_table_alpha = c()
@@ -1207,7 +1209,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       x = data[data[,i]>0,i]
       names(x) = rownames(data)[data[,i]>0]
 
-      aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
+      aL = phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
       aL$treeNabu$branch.length = aL$BLbyT[,1]
       aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
 
@@ -1216,7 +1218,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
     }
 
 
-    qPDm = iNEXT.3D:::PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD")
+    qPDm = PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD")
     # qPDm = qPDm/N
     # alpha = qPDm %>% t %>% as.data.frame %>%
     #   set_colnames(q) %>% gather(Order.q, Estimate) %>%
@@ -1226,7 +1228,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
     joint = qPDm %>% t %>% as.data.frame %>%
       set_colnames(q) %>% gather(Order.q, Estimate) %>%
-      mutate(Coverage_real = rep(iNEXT.3D:::Coverage(data_alpha, "abundance", level), length(q)), Size = rep(level, length(q)))
+      mutate(Coverage_real = rep(Coverage(data_alpha, "abundance", level), length(q)), Size = rep(level, length(q)))
 
 
     # gamma = (gamma %>%
@@ -1250,7 +1252,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       x_k = Routledge_x[,k]
       names(x_k) = rownames(Routledge_x)
 
-      aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x_k, rootExtend = T, refT = reft)
+      aL = phyBranchAL_Abu(phylo = PDtree, data = x_k, rootExtend = T, refT = reft)
       aL$treeNabu$branch.length = aL$BLbyT[,1]
       aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
     })
@@ -1263,7 +1265,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       nt_k <- sum(Routledge_x[, k])
 
       sapply(1:length(level), function(i) {
-        iNEXT.3D:::PhD.m.est(
+        PhD.m.est(
           ai = ai_k,
           Lis = Lis_k,
           m = level[i],
@@ -1305,7 +1307,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       )
 
     coverage_list <- lapply(1:ncol(Routledge_x), function(j) {
-      iNEXT.3D:::Coverage(Routledge_x[, j], datatype = "abundance", m = level)
+      Coverage(Routledge_x[, j], datatype = "abundance", m = level)
     })
     names(coverage_list) <- paste0("Coverage_Assemblage", 1:ncol(Routledge_x))
 
@@ -1318,7 +1320,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
     alpha <- alpha %>%
       arrange(Order.q, Size) %>%
-      mutate(SC = rep(iNEXT.3D:::Coverage(data_alpha, "abundance", level), length(q)))
+      mutate(SC = rep(Coverage(data_alpha, "abundance", level), length(q)))
 
 
     coverage_cols <- grep("^Coverage_Assemblage", colnames(alpha), value = TRUE)
@@ -1393,7 +1395,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
         tree_bt = PDtree
 
-        bootstrap_population = iNEXT.beta3D:::bootstrap_population_multiple_assemblage(data, data_gamma, 'abundance')
+        bootstrap_population = bootstrap_population_multiple_assemblage(data, data_gamma, 'abundance')
         p_bt = bootstrap_population
         unseen_p = p_bt[-(1:nrow(data)),] %>% matrix(ncol = ncol(data))
 
@@ -1418,7 +1420,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
               f1 = sum(x == 1)
               f2 = sum(x == 2)
 
-              aL = iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
+              aL = phyBranchAL_Abu(phylo = PDtree, data = x, rootExtend = T, refT = reft)
 
               aL$treeNabu$branch.length = aL$BLbyT[,1]
               aL = aL$treeNabu %>% select(branch.abun,branch.length)
@@ -1434,7 +1436,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
               if (sum(te[,i]) == 0) return(0) else {
 
-                iNEXT.3D:::phyBranchAL_Abu(phylo = PDtree, data = x_bt[1:nrow(data),i], rootExtend = T, refT = reft)$treeNabu %>%
+                phyBranchAL_Abu(phylo = PDtree, data = x_bt[1:nrow(data),i], rootExtend = T, refT = reft)$treeNabu %>%
                   subset(label %in% names(which(te[,i] == TRUE))) %>% select(branch.length) %>% sum
 
               }
@@ -1485,11 +1487,11 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
         bootstrap_data_alpha = bootstrap_data_alpha[bootstrap_data_alpha>0]
         Routledge_x <- x_bt[(rowSums(x_bt) != 0), ]
 
-        aL = iNEXT.3D:::phyBranchAL_Abu(phylo = tree_bt, data = bootstrap_data_gamma, rootExtend = T, refT = reft)
+        aL = phyBranchAL_Abu(phylo = tree_bt, data = bootstrap_data_gamma, rootExtend = T, refT = reft)
         aL$treeNabu$branch.length = aL$BLbyT[,1]
         aL_table_gamma = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
 
-        gamma = as.vector(iNEXT.3D:::PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD") %>% t)
+        gamma = as.vector(PhD.m.est(ai = aL_table_gamma$branch.abun, Lis = as.matrix(aL_table_gamma$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD") %>% t)
 
 
         aL_table_alpha = c()
@@ -1503,7 +1505,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           names(x) = rownames(p_bt)
           x = x[x_bt[,i]>0]
 
-          aL = iNEXT.3D:::phyBranchAL_Abu(phylo = tree_bt, data = x, rootExtend = T, refT = reft)
+          aL = phyBranchAL_Abu(phylo = tree_bt, data = x, rootExtend = T, refT = reft)
           aL$treeNabu$branch.length = aL$BLbyT[,1]
           aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
 
@@ -1513,7 +1515,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
         # alpha = as.vector((iNEXT.3D:::PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD")/N) %>% t)
 
-        joint = as.vector((iNEXT.3D:::PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD")) %>% t)
+        joint = as.vector((PhD.m.est(ai = aL_table_alpha$branch.abun, Lis = as.matrix(aL_table_alpha$branch.length), m = level, q = q, nt = n, reft = reft, cal = "PD")) %>% t)
 
         #alpha
         aL_table_k = lapply(1:ncol(Routledge_x), function(k){
@@ -1521,7 +1523,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           x_k = Routledge_x[,k]
           names(x_k) = rownames(Routledge_x)
 
-          aL = iNEXT.3D:::phyBranchAL_Abu(phylo = tree_bt, data = x_k, rootExtend = T, refT = reft)
+          aL = phyBranchAL_Abu(phylo = tree_bt, data = x_k, rootExtend = T, refT = reft)
           aL$treeNabu$branch.length = aL$BLbyT[,1]
           aL_table = aL$treeNabu %>% select(branch.abun, branch.length, tgroup)
         })
@@ -1534,7 +1536,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           nt_k <- sum(Routledge_x[, k])
 
           sapply(1:length(level), function(i) {
-            iNEXT.3D:::PhD.m.est(
+            PhD.m.est(
               ai = ai_k,
               Lis = Lis_k,
               m = level[i],
@@ -1576,7 +1578,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
           )
 
         coverage_list <- lapply(1:ncol(Routledge_x), function(j) {
-          iNEXT.3D:::Coverage(Routledge_x[, j], datatype = "abundance", m = level)
+          Coverage(Routledge_x[, j], datatype = "abundance", m = level)
         })
         names(coverage_list) <- paste0("Coverage_Assemblage", 1:ncol(Routledge_x))
 
@@ -1589,7 +1591,7 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
 
         alpha <- alpha %>%
           arrange(Order.q, Size) %>%
-          mutate(SC = rep(iNEXT.3D:::Coverage(data_alpha, "abundance", level), length(q)))
+          mutate(SC = rep(Coverage(data_alpha, "abundance", level), length(q)))
 
 
         coverage_cols <- grep("^Coverage_Assemblage", colnames(alpha), value = TRUE)
@@ -1719,13 +1721,6 @@ iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = N
       assem_colnames,
       "Estimate", "Method", "s.e.", "LCL", "UCL", "Diversity"
     )
-
-    # joint = joint %>% mutate(s.e. = se$Estimate,
-    #                          LCL = Estimate - tmp * se$Estimate,
-    #                          UCL = Estimate + tmp * se$Estimate,
-    #                          Dataset = dataset_name,
-    #                          Diversity = index) %>%
-    #   arrange(Order.q, Size) %>% .[,c(9, 2, 5, 4, 1, 3, 6, 7, 8, 10)] %>% rename("Joint" = "Estimate")
 
     joint <- joint %>%
       mutate(
@@ -2264,7 +2259,8 @@ ggiNEXT_seq_Relative = function(output, type = 'B'){
 #' @param decomposition decomposition type: relative \code{(decomposition = "relative")} or absolute decomposition \code{(decomposition = "absolute")}. Default is \code{"relative"}.
 #'
 #' @return a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
-#'
+#' @importFrom ape reorder.phylo
+#' @importFrom ade4 newick2phylog
 #' @examples
 #'
 #' data("global")

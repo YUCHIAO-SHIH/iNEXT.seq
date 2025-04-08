@@ -34,20 +34,37 @@ TranMul = function(data, tree){
 }
 
 
-delta = function(data, k, n, A){
-  ans = sapply(1:length(k), function(i){
-    if(k[i]<n){      
-      data1 = data[data[,1]<=(n-k[i]) &  data[,1]>=1,]
-      if( class(data1) == "numeric" ) data1 = t(as.matrix(data1))
-      sum( data1[,2]*(data1[,1]/n)*exp(lchoose(n-data1[,1], k[i])-lchoose(n-1, k[i])) ) 
-    }else{
-      g1 = sum(data[data==1,2])
-      g1*(1-A)^(k[i]-n+1)/n 
+# delta = function(data, k, n, A){
+#   ans = sapply(1:length(k), function(i){
+#     if(k[i]<n){      
+#       data1 = data[data[,1]<=(n-k[i]) &  data[,1]>=1,]
+#       if (class(data1) == "numeric")data1 = t(as.matrix(data1))
+#       sum( data1[,2]*(data1[,1]/n)*exp(lchoose(n-data1[,1], k[i])-lchoose(n-1, k[i])) ) 
+#     }else{
+#       g1 = sum(data[data==1,2])
+#       g1*(1-A)^(k[i]-n+1)/n 
+#     }
+#   })
+#   return( ans )
+# }
+
+
+delta <- function(data, k, n, A) {
+  ans <- sapply(1:length(k), function(i) {
+    if (k[i] < n) {
+      data1 <- data[data[, 1] <= (n - k[i]) & data[, 1] >= 1, ]
+      if (is.null(dim(data1))) data1 <- t(as.matrix(data1))
+      sum(
+        data1[, 2] * (data1[, 1] / n) *
+          exp(lchoose(n - data1[, 1], k[i]) - lchoose(n - 1, k[i]))
+      )
+    } else {
+      g1 <- sum(data[data == 1, 2])
+      g1 * (1 - A)^(k[i] - n + 1) / n
     }
   })
-  return( ans )
+  return(ans)
 }
-
 
 
 Boots.pop = function(data, rtree, tmp){
@@ -1187,3 +1204,538 @@ gghier_phylogeny = function(outcome, method = 1){
     guides(linetype = guide_legend(keywidth = 2.5))
   return(out)
 }
+
+#####以下為了解決check的問題#####
+
+
+as.incfreq <- function (data, nT = NULL){
+  if (inherits(data, c("data.frame", "matrix"))) {
+    if (sum(data > 1) != 0) 
+      stop("The data for datatype = 'incidence_raw' can only contain values zero (undetected) or one (detected). Please transform values to zero or one.", 
+           call. = FALSE)
+    if (is.null(nT)) 
+      nT = ncol(data)
+    if (inherits(nT, "data.frame")) 
+      nT = unlist(nT)
+    mydata = list()
+    if (ncol(data) != sum(nT)) 
+      stop("Number of columns does not euqal to the sum of nT (number of sampling units for each assemblage).", 
+           call. = FALSE)
+    ntmp <- 0
+    for (i in 1:length(nT)) {
+      mydata[[i]] <- data[, (ntmp + 1):(ntmp + nT[i])]
+      ntmp <- ntmp + nT[i]
+    }
+    if (is.null(names(nT))) {
+      names(mydata) <- paste0("Assemblage", 1:length(nT))
+    }
+    else {
+      names(mydata) = names(nT)
+    }
+    data = lapply(mydata, function(i) {
+      out = c(nT = ncol(i), rowSums(i))
+      return(out)
+    })
+  }
+  else if (inherits(data, "list")) 
+    data <- lapply(data, function(i) {
+      if (sum(i > 1) != 0) 
+        stop("The data for datatype = 'incidence_raw' can only contain values zero (undetected) or one (detected). Please transform values to zero or one.", 
+             call. = FALSE)
+      c(nT = ncol(i), rowSums(i))
+    })
+  if (length(data) == 1) 
+    data = data[[1]]
+  return(data)
+}
+Coverage<- function (data, datatype, m){
+  if (!(datatype %in% c("abundance", "incidence_freq", "incidence_raw"))) 
+    stop("Invalid Coverage datatype", call. = FALSE)
+  if (datatype == "incidence_raw") {
+    data = as.incfreq(data)
+    datatype = "incidence_freq"
+  }
+  n <- ifelse(datatype == "incidence_freq", data[1], sum(data))
+  if (datatype == "incidence_freq") {
+    x <- data[-1]
+    u <- sum(x)
+  }
+  else if (datatype == "abundance") {
+    x <- data
+  }
+  x <- x[x > 0]
+  f1 = sum(x == 1)
+  f2 = sum(x == 2)
+  f0.hat <- ifelse(f2 == 0, (n - 1)/n * f1 * (f1 - 1)/2, (n - 
+                                                            1)/n * f1^2/2/f2)
+  A <- ifelse(f1 > 0, n * f0.hat/(n * f0.hat + f1), 1)
+  Sub <- function(m) {
+    if (m < n) {
+      if (m == round(m)) {
+        xx <- x[(n - x) >= m]
+        out <- 1 - sum(xx/n * exp(lgamma(n - xx + 1) - 
+                                    lgamma(n - xx - m + 1) - lgamma(n) + lgamma(n - 
+                                                                                  m)))
+      }
+      else {
+        cbym = rbind(c(floor(m), ceiling(m)), sapply(c(floor(m), 
+                                                       ceiling(m)), function(k) {
+                                                         xx <- x[(n - x) >= k]
+                                                         if (k == n) 
+                                                           1 - f1/n * A
+                                                         else 1 - sum(xx/n * exp(lgamma(n - xx + 1) - 
+                                                                                   lgamma(n - xx - k + 1) - lgamma(n) + lgamma(n - 
+                                                                                                                                 k)))
+                                                       }))
+        out <- (ceiling(m) - m) * cbym[-1, cbym[1, ] == 
+                                         floor(m)] + (m - floor(m)) * cbym[-1, cbym[1, 
+                                         ] == ceiling(m)]
+      }
+    }
+    if (m == n) 
+      out <- 1 - f1/n * A
+    if (m > n) 
+      out <- 1 - f1/n * A^(m - n + 1)
+    out
+  }
+  Sub2 <- function(m) {
+    if (m < n) {
+      if (m == round(m)) {
+        xx <- x[(n - x) >= m]
+        out <- 1 - sum(xx/u * exp(lgamma(n - xx + 1) - 
+                                    lgamma(n - xx - m + 1) - lgamma(n) + lgamma(n - 
+                                                                                  m)))
+      }
+      else {
+        cbym = rbind(c(floor(m), ceiling(m)), sapply(c(floor(m), 
+                                                       ceiling(m)), function(k) {
+                                                         xx <- x[(n - x) >= k]
+                                                         if (k == n) 
+                                                           1 - f1/u * A
+                                                         else 1 - sum(xx/u * exp(lgamma(n - xx + 1) - 
+                                                                                   lgamma(n - xx - k + 1) - lgamma(n) + lgamma(n - 
+                                                                                                                                 k)))
+                                                       }))
+        out <- (ceiling(m) - m) * cbym[-1, cbym[1, ] == 
+                                         floor(m)] + (m - floor(m)) * cbym[-1, cbym[1, 
+                                         ] == ceiling(m)]
+      }
+    }
+    if (m == n) 
+      out <- 1 - f1/u * A
+    if (m > n) 
+      out <- 1 - f1/u * A^(m - n + 1)
+    out
+  }
+  sapply(m, FUN = function(i) {
+    ifelse(datatype != "abundance", Sub2(i), Sub(i))
+  })
+}
+
+coverage_to_size<-function (x, C, datatype = "abundance"){
+  Coverage<- function (data, datatype, m){
+    if (!(datatype %in% c("abundance", "incidence_freq", "incidence_raw"))) 
+      stop("Invalid Coverage datatype", call. = FALSE)
+    if (datatype == "incidence_raw") {
+      data = as.incfreq(data)
+      datatype = "incidence_freq"
+    }
+    n <- ifelse(datatype == "incidence_freq", data[1], sum(data))
+    if (datatype == "incidence_freq") {
+      x <- data[-1]
+      u <- sum(x)
+    }
+    else if (datatype == "abundance") {
+      x <- data
+    }
+    x <- x[x > 0]
+    f1 = sum(x == 1)
+    f2 = sum(x == 2)
+    f0.hat <- ifelse(f2 == 0, (n - 1)/n * f1 * (f1 - 1)/2, (n - 
+                                                              1)/n * f1^2/2/f2)
+    A <- ifelse(f1 > 0, n * f0.hat/(n * f0.hat + f1), 1)
+    Sub <- function(m) {
+      if (m < n) {
+        if (m == round(m)) {
+          xx <- x[(n - x) >= m]
+          out <- 1 - sum(xx/n * exp(lgamma(n - xx + 1) - 
+                                      lgamma(n - xx - m + 1) - lgamma(n) + lgamma(n - 
+                                                                                    m)))
+        }
+        else {
+          cbym = rbind(c(floor(m), ceiling(m)), sapply(c(floor(m), 
+                                                         ceiling(m)), function(k) {
+                                                           xx <- x[(n - x) >= k]
+                                                           if (k == n) 
+                                                             1 - f1/n * A
+                                                           else 1 - sum(xx/n * exp(lgamma(n - xx + 1) - 
+                                                                                     lgamma(n - xx - k + 1) - lgamma(n) + lgamma(n - 
+                                                                                                                                   k)))
+                                                         }))
+          out <- (ceiling(m) - m) * cbym[-1, cbym[1, ] == 
+                                           floor(m)] + (m - floor(m)) * cbym[-1, cbym[1, 
+                                           ] == ceiling(m)]
+        }
+      }
+      if (m == n) 
+        out <- 1 - f1/n * A
+      if (m > n) 
+        out <- 1 - f1/n * A^(m - n + 1)
+      out
+    }
+    Sub2 <- function(m) {
+      if (m < n) {
+        if (m == round(m)) {
+          xx <- x[(n - x) >= m]
+          out <- 1 - sum(xx/u * exp(lgamma(n - xx + 1) - 
+                                      lgamma(n - xx - m + 1) - lgamma(n) + lgamma(n - 
+                                                                                    m)))
+        }
+        else {
+          cbym = rbind(c(floor(m), ceiling(m)), sapply(c(floor(m), 
+                                                         ceiling(m)), function(k) {
+                                                           xx <- x[(n - x) >= k]
+                                                           if (k == n) 
+                                                             1 - f1/u * A
+                                                           else 1 - sum(xx/u * exp(lgamma(n - xx + 1) - 
+                                                                                     lgamma(n - xx - k + 1) - lgamma(n) + lgamma(n - 
+                                                                                                                                   k)))
+                                                         }))
+          out <- (ceiling(m) - m) * cbym[-1, cbym[1, ] == 
+                                           floor(m)] + (m - floor(m)) * cbym[-1, cbym[1, 
+                                           ] == ceiling(m)]
+        }
+      }
+      if (m == n) 
+        out <- 1 - f1/u * A
+      if (m > n) 
+        out <- 1 - f1/u * A^(m - n + 1)
+      out
+    }
+    sapply(m, FUN = function(i) {
+      ifelse(datatype != "abundance", Sub2(i), Sub(i))
+    })
+  }
+  if (datatype == "abundance") {
+    n <- sum(x)
+    refC <- Coverage(x, "abundance", n)
+    f <- function(m, C) abs(Coverage(x, "abundance", 
+                                                m) - C)
+    if (refC == C) {
+      mm = n
+    }
+    else if (refC > C) {
+      opt <- optimize(f, C = C, lower = 0, upper = sum(x))
+      mm <- opt$minimum
+    }
+    else if (refC < C) {
+      f1 <- sum(x == 1)
+      f2 <- sum(x == 2)
+      if (f1 > 0 & f2 > 0) {
+        A <- (n - 1) * f1/((n - 1) * f1 + 2 * f2)
+      }
+      if (f1 > 1 & f2 == 0) {
+        A <- (n - 1) * (f1 - 1)/((n - 1) * (f1 - 1) + 
+                                   2)
+      }
+      if (f1 == 1 & f2 == 0) {
+        A <- 1
+      }
+      if (f1 == 0 & f2 == 0) {
+        A <- 1
+      }
+      if (f1 == 0 & f2 > 0) {
+        A <- 1
+      }
+      mm <- (log(n/f1) + log(1 - C))/log(A) - 1
+      if (is.nan(mm) == TRUE) 
+        mm = Inf
+      mm <- n + mm
+    }
+  }
+  else {
+    m <- NULL
+    n <- max(x)
+    refC <- Coverage(x, "incidence_freq", n)
+    f <- function(m, C) abs(Coverage(x, "incidence_freq", 
+                                                m) - C)
+    if (refC == C) {
+      mm = n
+    }
+    else if (refC > C) {
+      opt <- optimize(f, C = C, lower = 0, upper = max(x))
+      mm <- opt$minimum
+    }
+    else if (refC < C) {
+      f1 <- sum(x == 1)
+      f2 <- sum(x == 2)
+      U <- sum(x) - max(x)
+      if (f1 > 0 & f2 > 0) {
+        A <- (n - 1) * f1/((n - 1) * f1 + 2 * f2)
+      }
+      if (f1 > 1 & f2 == 0) {
+        A <- (n - 1) * (f1 - 1)/((n - 1) * (f1 - 1) + 
+                                   2)
+      }
+      if (f1 == 1 & f2 == 0) {
+        A <- 1
+      }
+      if (f1 == 0 & f2 == 0) {
+        A <- 1
+      }
+      if (f1 == 0 & f2 > 0) {
+        A <- 1
+      }
+      mm <- (log(U/f1) + log(1 - C))/log(A) - 1
+      if (is.nan(mm) == TRUE) 
+        mm = Inf
+      mm <- n + mm
+    }
+  }
+  return(mm)
+}
+
+check_datatype <- function (datatype){
+  TYPE <- c("abundance", "incidence", "incidence_freq", "incidence_raw")
+  if ((is.na(pmatch(datatype, TYPE))) | (pmatch(datatype, TYPE) == 
+                                         -1)) 
+    stop("invalid datatype")
+  datatype <- match.arg(datatype, TYPE)
+  if (datatype == "incidence_freq") 
+    datatype <- "incidence"
+  return(datatype)
+}
+# phyBranchAL_Abu <- function (phylo, data, datatype = "abundance", refT = 0, rootExtend = T, 
+#           remove0 = T){
+#   if (!inherits(phylo, "phylo")) 
+#     stop("invlid class: only support phylo object")
+#   datatype <- check_datatype(datatype)
+#   if (datatype == "incidence_freq" | datatype == "incidence") 
+#     stop("only support datatype=\"incidence_raw\"")
+#   labels <- names(data)
+#   my_match <- match(labels, phylo$tip.label)
+#   if (sum(is.na(my_match)) > 0) 
+#     stop("Argument labels and tree Tip not matach")
+#   if (datatype == "abundance") {
+#     if (remove0 == T) {
+#       dtip = phylo$tip.label[-match(names(data[data > 0]), 
+#                                     phylo$tip.label)]
+#       subtree = ape::drop.tip(phylo, dtip)
+#       subdata = data[data > 0]
+#     }
+#     else {
+#       subtree <- phylo
+#       subdata <- data
+#     }
+#     phylo.root <- length(subtree$tip.label) + 1
+#     edgelength <- ape::node.depth.edgelength(subtree)
+#     treeH <- max(edgelength)
+#     phylo.t <- tidytree::as_tibble(subtree)
+#     phylo.t.1 <- phylo.t %>% mutate(branch.length = replace(branch.length, 
+#                                                             is.na(branch.length), 0), tgroup = case_when(node < 
+#                                                                                                            phylo.root ~ "Tip", node == phylo.root ~ "Root", 
+#                                                                                                          TRUE ~ "Inode"), newlabel = case_when(node - phylo.root == 
+#                                                                                                                                                  0 & (label == "" | is.na(label)) ~ "Root", label == 
+#                                                                                                                                                  "" | is.na(label) ~ paste("I", node - phylo.root, 
+#                                                                                                                                                                            sep = ""), TRUE ~ label), edgelengthv = edgelength, 
+#                                     node.age = case_when(edgelengthv == treeH ~ 0, TRUE ~ 
+#                                                            treeH - edgelengthv), branch.height = case_when(tgroup == 
+#                                                                                                              "Tip" ~ branch.length, tgroup == "Root" ~ treeH, 
+#                                                                                                            TRUE ~ branch.length + node.age)) %>% select(-label) %>% 
+#       rename(label = newlabel)
+#     tmp <- tibble(label = names(subdata), x = subdata)
+#     treeNdata <- full_join(phylo.t.1, tmp, by = "label")
+#     inodelist <- treeNdata %>% filter(tgroup != "Tip") %>% 
+#       pull(node)
+#     names(inodelist) <- treeNdata %>% filter(tgroup != "Tip") %>% 
+#       pull(label)
+#     class(treeNdata) = c("tbl_tree", class(treeNdata))
+#     inode_x <- sapply(inodelist, function(x) {
+#       offspring(treeNdata, x, tiponly = T) %>% select(x) %>% 
+#         sum()
+#     })
+#     tmp_all <- bind_rows(tibble(label = names(subdata), branch.abun = subdata), 
+#                          tibble(label = names(inode_x), branch.abun = inode_x))
+#     treeNdata <- full_join(treeNdata, tmp_all, by = "label") %>% 
+#       select(-x, -edgelengthv, -node.age)
+#     phyL <- sapply(refT, function(y) phyL_Abu_T_(treeNdata, 
+#                                                  y, rootExtend, treeH))
+#     colnames(phyL) <- paste("T", refT, sep = "")
+#     treeNdata <- treeNdata %>% select(-branch.height)
+#     z <- list(treeNabu = treeNdata, treeH = treeH, BLbyT = phyL)
+#     class(z) <- "Chaophyabu"
+#     return(z)
+#   }
+# }
+
+# PhD.m.est <- function (ai, Lis, m, q, nt, reft, cal){
+#   t_bars <- as.numeric(t(ai) %*% Lis/nt)
+#   if (sum(m > nt) > 0) {
+#     RPD_m <- RPD(ai, Lis, nt, nt - 1, q)
+#     obs <- PD.Tprofile(ai, Lis, q = q, reft = reft, cal = "PD", 
+#                        nt = nt) %>% matrix(., nrow = length(reft)) %>% t
+#     EPD = function(m, obs, asy) {
+#       m = m - nt
+#       out <- sapply(1:ncol(Lis), function(i) {
+#         asy_i <- asy[, i]
+#         obs_i <- obs[, i]
+#         RPD_m_i <- RPD_m[, i]
+#         Li <- Lis[, i]
+#         t_bar <- t_bars[i]
+#         asy_i <- sapply(1:length(q), function(j) {
+#           max(asy_i[j], obs_i[j])
+#         })
+#         beta <- rep(0, length(q))
+#         beta0plus <- which(asy_i != obs_i)
+#         beta[beta0plus] <- (obs_i[beta0plus] - RPD_m_i[beta0plus])/(asy_i[beta0plus] - 
+#                                                                       RPD_m_i[beta0plus])
+#         beta[beta == -Inf] = 1
+#         outq <- sapply(1:length(q), function(i) {
+#           if (q[i] != 2) {
+#             obs_i[i] + (asy_i[i] - obs_i[i]) * (1 - (1 - 
+#                                                        beta[i])^m)
+#           }
+#           else if (q[i] == 2 & beta[i] != 0) {
+#             1/sum((Li/(t_bar)^2) * ((1/(nt + m)) * (ai/nt) + 
+#                                       ((nt + m - 1)/(nt + m)) * (ai * (ai - 1)/(nt * 
+#                                                                                   (nt - 1)))))
+#           }
+#           else if (q[i] == 2 & beta[i] == 0) {
+#             asy_i[i]
+#           }
+#         })
+#         outq
+#       })
+#       return(out)
+#     }
+#     asy <- matrix(PhD.q.est(ai = ai, Lis = Lis, q = q, nt = nt, 
+#                             reft = reft, cal = "PD"), nrow = length(q), ncol = length(t_bars))
+#   }
+#   else if (sum(m == nt) > 0) {
+#     obs <- PD.Tprofile(ai, Lis, q = q, reft = reft, cal = "PD", 
+#                        nt = nt) %>% matrix(., nrow = length(reft)) %>% t
+#   }
+#   if (sum(m < nt) != 0) {
+#     int.m = sort(unique(c(floor(m[m < nt]), ceiling(m[m < 
+#                                                         nt]))))
+#     mRPD = lapply(int.m, function(k) RPD(ai = ai, Lis = Lis, 
+#                                          n = nt, m = k, q = q))
+#     names(mRPD) = int.m
+#     if (0 %in% int.m) 
+#       mRPD[names(mRPD) == 0][[1]] = matrix(0, nrow = nrow(mRPD[names(mRPD) == 
+#                                                                  0][[1]]), ncol = ncol(mRPD[names(mRPD) == 0][[1]]))
+#   }
+#   if (cal == "PD") {
+#     out <- sapply(m, function(mm) {
+#       if (mm < nt) {
+#         if (mm == round(mm)) {
+#           ans <- mRPD[names(mRPD) == mm][[1]]
+#         }
+#         else {
+#           ans <- (ceiling(mm) - mm) * mRPD[names(mRPD) == 
+#                                              floor(mm)][[1]] + (mm - floor(mm)) * mRPD[names(mRPD) == 
+#                                                                                          ceiling(mm)][[1]]
+#         }
+#       }
+#       else if (mm == nt) {
+#         ans <- obs
+#       }
+#       else if (mm == Inf) {
+#         ans <- asy
+#       }
+#       else {
+#         ans <- EPD(m = mm, obs = obs, asy = asy)
+#       }
+#       return(as.numeric(ans))
+#     })
+#   }
+#   else if (cal == "meanPD") {
+#     out <- sapply(m, function(mm) {
+#       if (mm < nt) {
+#         if (mm == round(mm)) {
+#           ans <- mRPD[names(mRPD) == mm][[1]]
+#         }
+#         else {
+#           ans <- (ceiling(mm) - mm) * mRPD[names(mRPD) == 
+#                                              floor(mm)][[1]] + (mm - floor(mm)) * mRPD[names(mRPD) == 
+#                                                                                          ceiling(mm)][[1]]
+#         }
+#       }
+#       else if (mm == nt) {
+#         ans <- obs
+#       }
+#       else if (mm == Inf) {
+#         ans <- asy
+#       }
+#       else {
+#         ans <- EPD(m = mm, obs = obs, asy = asy)
+#       }
+#       if (inherits(ans, c("numeric", "integer"))) 
+#         ans = matrix(ans, ncol = length(reft))
+#       ans <- sapply(1:length(reft), function(i) {
+#         ans[, i]/reft[i]
+#       })
+#       as.numeric(ans)
+#     })
+#   }
+#   out <- matrix(out, ncol = length(m))
+#   return(out)
+# }
+# 
+# bootstrap_population_multiple_assemblage <- function(data, data_gamma, datatype){
+#   if (datatype == "abundance") {
+#     S_obs = sum(data_gamma > 0)
+#     n = sum(data_gamma)
+#     f1 = sum(data_gamma == 1)
+#     f2 = sum(data_gamma == 2)
+#     f0_hat = ifelse(f2 == 0, (n - 1)/n * f1 * (f1 - 1)/2, 
+#                     (n - 1)/n * f1^2/2/f2) %>% ceiling()
+#     output = apply(data, 2, function(x) {
+#       p_i_hat = iNEXT.3D:::EstiBootComm.Ind(Spec = x)
+#       if (length(p_i_hat) != length(x)) {
+#         p_i_hat_unobs = p_i_hat[(length(x) + 1):length(p_i_hat)]
+#         p_i_hat_obs = p_i_hat[1:length(x)]
+#         p_i_hat = c(p_i_hat_obs, rep(0, f0_hat))
+#         candidate = which(p_i_hat == 0)
+#         chosen = sample(x = candidate, size = min(length(p_i_hat_unobs), 
+#                                                   length(candidate)), replace = F)
+#         p_i_hat[chosen] = (1 - sum(p_i_hat))/length(chosen)
+#         p_i_hat
+#       }
+#       else {
+#         p_i_hat = c(p_i_hat, rep(0, f0_hat))
+#         p_i_hat
+#       }
+#     })
+#   }
+#   if (datatype == "incidence") {
+#     S_obs = sum(data_gamma > 0)
+#     t = data_gamma[1]
+#     Q1 = sum(data_gamma == 1)
+#     Q2 = sum(data_gamma == 2)
+#     Q0_hat = if (Q2 == 0) {
+#       ((t - 1)/t) * (Q1 * (Q1 - 1)/2)
+#     }
+#     else {
+#       ((t - 1)/t) * ((Q1^2)/(2 * Q2))
+#     } %>% ceiling
+#     output = apply(data, 2, function(x) {
+#       pi_i_hat = iNEXT.3D:::EstiBootComm.Sam(Spec = x)
+#       if (length(pi_i_hat) != (length(x) - 1)) {
+#         pi_i_hat_unobs = pi_i_hat[length(x):length(pi_i_hat)]
+#         pi_i_hat_obs = pi_i_hat[1:(length(x) - 1)]
+#         pi_i_hat = c(pi_i_hat_obs, rep(0, Q0_hat))
+#         candidate = which(pi_i_hat == 0)
+#         chosen = sample(x = candidate, size = min(length(pi_i_hat_unobs), 
+#                                                   length(candidate)), replace = F)
+#         pi_i_hat[chosen] = unique(pi_i_hat_unobs)
+#         pi_i_hat
+#       }
+#       else {
+#         pi_i_hat = c(pi_i_hat, rep(0, Q0_hat))
+#         pi_i_hat
+#       }
+#     })
+#   }
+#   return(output)
+# }

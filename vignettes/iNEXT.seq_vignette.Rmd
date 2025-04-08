@@ -80,7 +80,7 @@ If you publish your work based on the results from the `iNEXT.seq` package, you 
 
 
 ## HOW TO RUN iNEXT.seq:
-The `iNEXT.seq` package is available from [CRAN](https://cran.r-project.org/package=iNEXT.seq) and can be downloaded with a standard R installation procedure or can be downloaded from Anne Chao's [iNEXT.seq_github](https://github.com/ChunYuYeh/iNEXT.seq) using the following commands. For a first-time installation, an additional visualization extension package (`ggplot2`) must be installed and loaded. 
+The `iNEXT.seq` package is available from [CRAN](https://cran.r-project.org/package=iNEXT.seq) and can be downloaded with a standard R installation procedure or can be downloaded from Anne Chao's [iNEXT.seq_github](https://github.com/YUCHIAO-SHIH/iNEXT.seq) using the following commands. For a first-time installation, an additional visualization extension package (`ggplot2`) must be installed and loaded. 
 
 
 ```{r eval=FALSE}
@@ -289,7 +289,7 @@ When `base = 'size'`, the `iNEXTseq()` function returns the `"iNEXTseq"` object 
 
 #### Rarefaction/Extrapolation Via Examples
 
-Run the `iNEXTseq()` function with `esophagus` data to compute multiple-assemblage phylogenetic diversity standardized by sample coverage. (Here we only show the first six rows for each output data frame)
+Run the `iNEXTseq()` function with `fungi` data to compute multiple-assemblage phylogenetic diversity standardized by sample coverage. (Here we only show the first six rows for each output data frame)
 
 ```{r eval=FALSE}
 data("fungi")
@@ -498,8 +498,7 @@ out = iNEXT_seq_Relative(data = fungi[1], q = c(0, 1, 2), nboot = 10,
 ```
 
 ```{r echo=FALSE}
-out = iNEXT_seq_Relative(data = fungi[1], q = c(0, 1, 2), nboot = 10, 
-               datatype ="abundance",
+out = iNEXT_seq_Relative(data = fungi[1], q = c(0, 1, 2), nboot = 10,
                PDtree = fungi_tree, PDreftime = NULL)
 lapply(out$T03T04, function(x) {
     tmp = x[1:6,]
@@ -732,7 +731,7 @@ ggObsAsyPD(ObsAsyPD_out, type = "D")
 
 Input data for each data set with several assemblages/sites include samples species abundances in an empirical sample of n individuals (“reference sample"). When there are N assemblages in a data set, input data consist of a list with an S by N abundance matrix.
 
-A data set (a small example dataset from Chinese wetlands community) is included in `iNEXT.seq` package for illustration. The data consist a data.frames of five assemblages/habitats ("NE", "NW", "NC", "YML" and "SC").
+A data set (a small example dataset from Chinese wetlands community) is included in `iNEXT.seq` package for illustration. The data consist a data.frames of five assemblages/habitats ("TRRsed1", "TRRsed2", "TRRsed3", "NP2" ,"NP3","SLEpi20M" and "LMEpi24M").
 
 Run the following code to `wetland` OTU count data: (Here we only show the first ten rows for the matrix)
 
@@ -748,7 +747,7 @@ head(global, 10)
 
 #### Phylogenetic tree for phylogenetic diversity
 
-To perform phylogenetic diversity analysis, the phylogenetic tree (in Newick format) spanned by species observed in the pooled data is required. For the data set `wetland`, the phylogenetic tree for all observed species (including species in "NE", "NW", "NC", "YML" and "SC") is stored in the file `wetland_tree`. A partial list of the tip labels and node labels (not required) are shown below.
+To perform phylogenetic diversity analysis, the phylogenetic tree (in Newick format) spanned by species observed in the pooled data is required. For the data set `wetland`, the phylogenetic tree for all observed species (including species in "TRRsed1", "TRRsed2", "TRRsed3", "NP2" ,"NP3","SLEpi20M" and "LMEpi24M") is stored in the file `wetland_tree`. A partial list of the tip labels and node labels (not required) are shown below.
 
 ```{r eval=FALSE}
 data("global_tree")
@@ -762,7 +761,7 @@ global_tree
 
 #### Structure matrix for hierarchical phylogenetic diversity
 
-In addition to OTU count data and phylogenetic tree, a hierarchical structure matrix of data is required. The structure of matrix is m x N (number of hierarchical layers times number of assemblages). The hierarchical structure matrix of data set `wetland` are shown below.
+In addition to OTU count data and phylogenetic tree, a hierarchical structure matrix of data is required. The structure of matrix is m x N (number of hierarchical layers times number of assemblages). The hierarchical structure matrix of data set `global` are shown below.
 
 ```{r eval=FALSE}
 data("global_mat")

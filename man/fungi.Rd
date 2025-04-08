@@ -23,6 +23,6 @@ A list of two species-by-assemblage \code{data.frame} objects: \cr
 }
 
 \references{
-V\'{e}trovsk\'{y}, T., \\& Baldrian, P. (2015). Data from: The rpb2 gene represents a viable alternative molecular marker for the analysis of environmental fungal communities. Dryad Digital Repository. \doi{10.5061/dryad.vj3p9} \cr\cr
+V\'{e}trovsk\'{y}, T., Baldrian, P. (2015). Data from: The rpb2 gene represents a viable alternative molecular marker for the analysis of environmental fungal communities. Dryad Digital Repository. \doi{10.5061/dryad.vj3p9} \cr\cr
 }
 \keyword{datasets}
