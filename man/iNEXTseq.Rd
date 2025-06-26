@@ -50,6 +50,7 @@ data("fungi")
 data("fungi_tree")
 output <- iNEXTseq(fungi[1], q = c(0,1,2), level = seq(0.5, 1, 0.05), nboot = 10,
                    conf = 0.95, PDtree = fungi_tree, PDreftime = NULL, PDtype = 'meanPD')
+output
 
 # Incidence data example (assuming incidence_data is formatted correctly)
 # output <- iNEXTseq(incidence_data, q = c(0,1,2), datatype = "incidence_raw",

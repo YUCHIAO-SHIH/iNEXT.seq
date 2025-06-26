@@ -44,6 +44,7 @@
 #' data("fungi_tree")
 #' output <- iNEXTseq(fungi[1], q = c(0,1,2), level = seq(0.5, 1, 0.05), nboot = 10,
 #'                    conf = 0.95, PDtree = fungi_tree, PDreftime = NULL, PDtype = 'meanPD')
+#' output
 #'
 #' # Incidence data example (assuming incidence_data is formatted correctly)
 #' # output <- iNEXTseq(incidence_data, q = c(0,1,2), datatype = "incidence_raw",
@@ -169,6 +170,7 @@ ggiNEXTseq <- function(output, type = "B"){
 #' data("fungi_tree")
 #' ObsAsyPD_output <- ObsAsyPD(fungi[1], q = seq(0, 2, 0.2), PDtree = fungi_tree)
 #'
+#' ObsAsyPD_output
 #' @export
 ObsAsyPD <- function(data, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
                      PDtree, type = "mle", decomposition = "relative") {
@@ -410,6 +412,7 @@ ggObsAsyPD <- function(output, type = "B"){
 #' data("fungi_tree")
 #' output <- iNEXT_seq_Relative(fungi[1], q = c(0,1,2), level = seq(0.5, 1, 0.05), nboot = 10,
 #'                    conf = 0.95, PDtree = fungi_tree, PDreftime = NULL, PDtype = 'meanPD')
+#' output
 #'
 #' @export
 iNEXT_seq_Relative<-function(data, q = c(0, 1, 2),  base = 'coverage', level = NULL, nboot = 10, conf = 0.95,
@@ -1795,20 +1798,18 @@ ggiNEXT_seq_Relative = function(output, type = 'B'){
 
   if ((length(output[[1]]) == 7 & type == "B") | (length(output[[1]]) == 3)) {
 
-    if (unique(output[[1]]$gamma$Diversity) == 'TD') { ylab = "Taxonomic diversity" }
+   
     if (unique(output[[1]]$gamma$Diversity) == 'PD') { ylab = "Phylogenetic diversity" }
     if (unique(output[[1]]$gamma$Diversity) == 'meanPD') { ylab = "Mean phylogenetic diversity" }
-    if (unique(output[[1]]$gamma$Diversity) == 'FD_tau') { ylab = "Functional diversity (given tau)" }
-    if (unique(output[[1]]$gamma$Diversity) == 'FD_AUC') { ylab = "Functional diversity (AUC)" }
+  
   }
 
   if (length(output[[1]]) == 7 & type == "D") {
 
-    if (unique(output[[1]]$gamma$Diversity) == 'TD') { ylab = "Taxonomic dissimilarity" }
+
     if (unique(output[[1]]$gamma$Diversity) == 'PD') { ylab = "Phylogenetic dissimilarity" }
     if (unique(output[[1]]$gamma$Diversity) == 'meanPD') { ylab = "Mean phylogenetic dissimilarity" }
-    if (unique(output[[1]]$gamma$Diversity) == 'FD_tau') { ylab = "Functional dissimilarity (given tau)" }
-    if (unique(output[[1]]$gamma$Diversity) == 'FD_AUC') { ylab = "Functional dissimilarity (AUC)" }
+    
   }
 
   if (length(output[[1]]) == 7) {
@@ -2108,8 +2109,10 @@ ggiNEXT_seq_Relative = function(output, type = 'B'){
 
       df = rbind(C, U, V, S)
       for (i in unique(C$Order.q)) df$Order.q[df$Order.q == i] = paste0('q = ', i)
-      df$div_type <- factor(df$div_type, levels = c("1-CqN", "1-UqN", "1-VqN", "1-SqN"))
-
+      # df$div_type <- factor(df$div_type, levels = c("1-CqN", "1-UqN", "1-VqN", "1-SqN"))
+      df$div_type <- factor(df$div_type, 
+                            levels = c("1-CqN", "1-UqN", "1-VqN", "1-SqN"),
+                            labels = c("1-CqN*", "1-UqN*", "1-VqN*", "1-SqN*"))
       id_obs = which(df$Method == 'Observed')
 
       if (length(id_obs) > 0) {
@@ -2244,9 +2247,9 @@ ggiNEXT_seq_Relative = function(output, type = 'B'){
 
 
 
-#' function to calculate hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure
+#' function to calculate hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measures
 #'
-#' \code{hierPD}: function to calculate empirical estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure.
+#' \code{hierPD}: function to calculate observed and asymptotic diversity estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measures.
 #'
 #' @param data data should be input as a \code{matrix/data.frame} (species by assemblages).
 #' @param mat hierarchical structure of data should be input as a \code{matrix}.
@@ -2268,6 +2271,7 @@ ggiNEXT_seq_Relative = function(output, type = 'B'){
 #' data("global_mat")
 #' hier_output <- hierPD(global, mat = global_mat, q = seq(0, 2, 0.2), PDtree = global_tree)
 #'
+#' hier_output
 #' @export
 hierPD <- function(data, mat, q = seq(0, 2, 0.2), weight = "size", nboot = 10, conf = 0.95,
                    PDtree, type = "mle", decomposition = "relative"){
@@ -2309,10 +2313,13 @@ hierPD <- function(data, mat, q = seq(0, 2, 0.2), weight = "size", nboot = 10, c
 #' @export
 gghierPD <- function(output, type = "A"){
 
-  m = ifelse(type=="A", 4,
-             ifelse(type=="B", 5,
-                    ifelse(type=="D", 6, NA)))
-
+  # m = ifelse(type=="A", 4,
+  #            ifelse(type=="B", 5,
+  #                   ifelse(type=="D", 6, NA)))
+  m <- ifelse(type == "A", 4,
+              ifelse(type == "B", 5,
+                     ifelse(type == "D", 6,
+                            ifelse(type == "P", 7, NA))))
   if (m == 6) {
     output = output[grep("1-", output$Method), ]
     if (unique(output$Decomposition) == "relative") {
@@ -2330,6 +2337,27 @@ gghierPD <- function(output, type = "A"){
     output$Method = fct_inorder(output$Method)
     plot_out = ggplot(output, aes(x = Order.q, y = Estimator,
                                   colour = Method, fill = Method)) + facet_grid(fct_inorder(group) ~ .) +
+      geom_line(size = 1.5) +
+      geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Method), linetype = 0, alpha = 0.2) +
+      theme_bw() +
+      theme(legend.position = "bottom", legend.box = "vertical", legend.key.width = unit(1.2, "cm"),
+            legend.title = element_blank(), legend.margin = margin(0, 0, 0, 0),
+            legend.box.margin = margin(-10, -10, -5, -10), text = element_text(size = 16),
+            plot.margin = unit(c(5.5, 5.5, 5.5, 5.5), "pt")) +
+      guides(linetype = guide_legend(keywidth = 2.5))
+  }else if(m == 7){
+      output = output[grep("^q", output$Method), ]
+# 
+#       output$group = "qPD_gamma"
+#       output$group[grep("qPD_alpha1", output$Method)] = "qPD_alpha1"
+#       output$group[grep("qPD_alpha2", output$Method)] = "qPD_alpha2"
+      
+      output = output |> filter(Method %in% c("qPD_Beta 1", "qPD_Beta 2", "qPD_alpha1"))
+      # output$group[grep("1-VqN*", output$Method)] = "1-VqN*"
+    
+    output$Method = fct_inorder(output$Method)
+    plot_out = ggplot(output, aes(x = Order.q, y = Estimator,
+                                  colour = Method, fill = Method)) + 
       geom_line(size = 1.5) +
       geom_ribbon(aes(ymin = LCL, ymax = UCL, fill = Method), linetype = 0, alpha = 0.2) +
       theme_bw() +

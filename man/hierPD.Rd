@@ -2,7 +2,7 @@
 % Please edit documentation in R/MainFun.R
 \name{hierPD}
 \alias{hierPD}
-\title{function to calculate hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure}
+\title{function to calculate hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measures}
 \usage{
 hierPD(
   data,
@@ -39,7 +39,7 @@ hierPD(
 a data frames with hierarchical phylogenetic diversity (gamma, alpha, and beta) and four types dissimilarity measure.
 }
 \description{
-\code{hierPD}: function to calculate empirical estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measure.
+\code{hierPD}: function to calculate observed and asymptotic diversity estimates for hierarchical phylogenetic gamma, alpha, beta diversity and dissimilarity measures.
 }
 \examples{
 
@@ -48,4 +48,5 @@ data("global_tree")
 data("global_mat")
 hier_output <- hierPD(global, mat = global_mat, q = seq(0, 2, 0.2), PDtree = global_tree)
 
+hier_output
 }

@@ -209,11 +209,11 @@ if (length(absent) != 0) {
 }
 
 plot(phylo_tree, direction = "downwards", show.tip.label = F)
-phylo_tree <- multi2di(phylo_tree, control = list(tol = 1e-10))
+# phylo_tree <- multi2di(phylo_tree, control = list(tol = 1e-10))
 # 將 phylo_tree 計算成 ultrametric tree
-phylo_tree <- compute.brlen(phylo_tree, method = "Grafen")
-# tree = phylo_tree %>% chronos() #%>% multi2di() %>% compute.brlen()
-tree =phylo_tree
+# phylo_tree <- compute.brlen(phylo_tree, method = "Grafen")
+tree = phylo_tree %>% chronos() #%>% multi2di() %>% compute.brlen()
+# tree =phylo_tree
 # tree = phylo_tree 
 class(tree) = "phylo"
 # write.tree(tree, file = "global_tree_I.txt") #存到 Unifrac那個資料夾

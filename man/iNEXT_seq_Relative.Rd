@@ -48,5 +48,6 @@ data("fungi")
 data("fungi_tree")
 output <- iNEXT_seq_Relative(fungi[1], q = c(0,1,2), level = seq(0.5, 1, 0.05), nboot = 10,
                    conf = 0.95, PDtree = fungi_tree, PDreftime = NULL, PDtype = 'meanPD')
+output
 
 }

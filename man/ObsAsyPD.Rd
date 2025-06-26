@@ -44,4 +44,5 @@ data("fungi")
 data("fungi_tree")
 ObsAsyPD_output <- ObsAsyPD(fungi[1], q = seq(0, 2, 0.2), PDtree = fungi_tree)
 
+ObsAsyPD_output
 }
